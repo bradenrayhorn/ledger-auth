@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/bradenrayhorn/ledger-auth/config"
+	"github.com/bradenrayhorn/ledger-auth/database"
 	"github.com/bradenrayhorn/ledger-auth/routing"
 	"go.uber.org/zap"
 )
@@ -11,6 +12,9 @@ func main() {
 
 	logger := initLogger()
 	defer logger.Sync()
+
+	zap.S().Debug("connecting to database...")
+	database.Setup()
 
 	zap.S().Debug("starting ledger-auth service...")
 
