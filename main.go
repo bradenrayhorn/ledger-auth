@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/bradenrayhorn/ledger-auth/config"
+	"github.com/bradenrayhorn/ledger-auth/routing"
 	"go.uber.org/zap"
 )
 
@@ -12,6 +13,15 @@ func main() {
 	defer logger.Sync()
 
 	zap.S().Debug("starting ledger-auth service...")
+
+	// start http
+	r := routing.MakeRouter()
+
+	err := r.Run()
+
+	if err != nil {
+		zap.S().Panic(err)
+	}
 }
 
 func initLogger() *zap.Logger {
