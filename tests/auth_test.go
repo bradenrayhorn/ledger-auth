@@ -29,12 +29,7 @@ func TestRegister(t *testing.T) {
 }
 
 func TestCannotRegisterTwice(t *testing.T) {
-	err := db.New(database.DB).CreateUser(context.Background(), db.CreateUserParams{
-		ID:       uuid.NewString(),
-		Username: "test",
-		Password: "$2a$10$naqzJWUaOFm1/512Od.wPO4H8Vh8K38IGAb7rtgFizSflLVhpgMRG",
-	})
-	assert.Nil(t, err)
+	_ = makeUser(t)
 
 	w := httptest.NewRecorder()
 	reader := strings.NewReader("username=test&password=password")
@@ -55,12 +50,7 @@ func TestCannotRegisterWithNoData(t *testing.T) {
 }
 
 func TestLogin(t *testing.T) {
-	err := db.New(database.DB).CreateUser(context.Background(), db.CreateUserParams{
-		ID:       uuid.NewString(),
-		Username: "test",
-		Password: "$2a$10$naqzJWUaOFm1/512Od.wPO4H8Vh8K38IGAb7rtgFizSflLVhpgMRG",
-	})
-	assert.Nil(t, err)
+	_ = makeUser(t)
 
 	testLogin(t, http.StatusOK, "test", "password")
 }
@@ -70,12 +60,7 @@ func TestCannotLoginWithInvalidUsername(t *testing.T) {
 }
 
 func TestCannotLoginWithInvalidPassword(t *testing.T) {
-	err := db.New(database.DB).CreateUser(context.Background(), db.CreateUserParams{
-		ID:       uuid.NewString(),
-		Username: "test",
-		Password: "$2a$10$naqzJWUaOFm1/512Od.wPO4H8Vh8K38IGAb7rtgFizSflLVhpgMRG",
-	})
-	assert.Nil(t, err)
+	_ = makeUser(t)
 
 	testLogin(t, http.StatusUnprocessableEntity, "test", "password-wrong")
 }
@@ -85,19 +70,7 @@ type GetMeResponse struct {
 }
 
 func TestShowMe(t *testing.T) {
-	user := db.User{
-		ID:        uuid.NewString(),
-		Username:  "test",
-		Password:  "$2a$10$naqzJWUaOFm1/512Od.wPO4H8Vh8K38IGAb7rtgFizSflLVhpgMRG",
-		CreatedAt: time.Time{},
-		UpdatedAt: time.Time{},
-	}
-	err := db.New(database.DB).CreateUser(context.Background(), db.CreateUserParams{
-		ID:       user.ID,
-		Username: user.Username,
-		Password: user.Password,
-	})
-	assert.Nil(t, err)
+	user := makeUser(t)
 
 	token, _ := jwt.CreateToken(user)
 
@@ -122,19 +95,7 @@ func TestCannotShowMeUnauthenticated(t *testing.T) {
 }
 
 func TestCannotShowMeWithExpiredToken(t *testing.T) {
-	user := db.User{
-		ID:        uuid.NewString(),
-		Username:  "test",
-		Password:  "$2a$10$naqzJWUaOFm1/512Od.wPO4H8Vh8K38IGAb7rtgFizSflLVhpgMRG",
-		CreatedAt: time.Time{},
-		UpdatedAt: time.Time{},
-	}
-	err := db.New(database.DB).CreateUser(context.Background(), db.CreateUserParams{
-		ID:       user.ID,
-		Username: user.Username,
-		Password: user.Password,
-	})
-	assert.Nil(t, err)
+	user := makeUser(t)
 
 	viper.Set("token_expiration", -10*time.Second)
 	token, _ := jwt.CreateToken(user)
@@ -156,4 +117,21 @@ func testLogin(t *testing.T, expectedStatus int, username string, password strin
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, expectedStatus, w.Code)
+}
+
+func makeUser(t *testing.T) db.User {
+	user := db.User{
+		ID:        uuid.NewString(),
+		Username:  "test",
+		Password:  "$2a$10$naqzJWUaOFm1/512Od.wPO4H8Vh8K38IGAb7rtgFizSflLVhpgMRG",
+		CreatedAt: time.Time{},
+		UpdatedAt: time.Time{},
+	}
+	err := db.New(database.DB).CreateUser(context.Background(), db.CreateUserParams{
+		ID:       user.ID,
+		Username: user.Username,
+		Password: user.Password,
+	})
+	assert.Nil(t, err)
+	return user
 }
