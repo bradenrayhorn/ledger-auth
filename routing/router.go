@@ -22,13 +22,18 @@ func MakeRouter() *gin.Engine {
 }
 
 func applyRoutes(router *gin.Engine) {
-	v1 := router.Group("/api/v1")
-	v1.GET("/health-check", func(context *gin.Context) {
+	router.GET("/api/v1/health-check", func(context *gin.Context) {
 		context.String(http.StatusOK, "ok")
 	})
 
-	authApi := v1.Group("/auth")
+	authApi := router.Group("/api/v1/auth")
+	api := router.Group("/api/v1")
+	api.Use(AuthMiddleware())
+
 	authApi.POST("/register", Register)
+	authApi.POST("/login", Login)
+
+	api.GET("/me", Me)
 }
 
 type ZapWriter func([]byte) (int, error)

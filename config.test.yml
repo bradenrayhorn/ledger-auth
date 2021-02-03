@@ -3,3 +3,4 @@ mysql_port: 3306
 mysql_username: root
 mysql_password: password
 mysql_database: ledger_auth
+rsa_path: ../test_rsa

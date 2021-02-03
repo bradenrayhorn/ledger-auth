@@ -20,6 +20,7 @@ func TestMain(m *testing.M) {
 
 func testMain(m *testing.M) int {
 	viper.AddConfigPath("../")
+	viper.Set("rsa_path", "../jwt_rsa")
 	config.LoadConfig()
 	database.Setup()
 
