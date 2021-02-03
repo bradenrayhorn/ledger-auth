@@ -8,5 +8,8 @@ SELECT EXISTS (
     SELECT id FROM users WHERE username = ?
 );
 
+-- name: GetUserByUsername :one
+SELECT * FROM users WHERE username = ?;
+
 -- name: UsersTruncate :exec
 TRUNCATE TABLE users;

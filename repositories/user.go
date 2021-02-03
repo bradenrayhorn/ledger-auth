@@ -17,3 +17,7 @@ func CreateUser(ctx context.Context, id string, username string, hashedPassword 
 		Password: hashedPassword,
 	})
 }
+
+func GetUserByUsername(ctx context.Context, username string) (db.User, error) {
+	return db.New(database.DB).GetUserByUsername(ctx, username)
+}

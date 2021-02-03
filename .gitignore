@@ -6,3 +6,5 @@
 .idea/sqldialects.xml
 config.yml
 coverage.txt
+jwt_rsa
+jwt_rsa.pub
