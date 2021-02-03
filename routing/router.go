@@ -1,13 +1,8 @@
 package routing
 
 import (
-	"context"
-	"fmt"
-	"github.com/bradenrayhorn/ledger-auth/database"
-	"github.com/bradenrayhorn/ledger-auth/internal/db"
 	"github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"io"
 	"net/http"
@@ -20,26 +15,20 @@ func MakeRouter() *gin.Engine {
 
 	router.Use(ginzap.Ginzap(zap.L(), time.RFC3339, false))
 	router.Use(ginzap.RecoveryWithZap(zap.L(), true))
+	router.Use(ErrorReporter())
 
 	applyRoutes(router)
 	return router
 }
 
 func applyRoutes(router *gin.Engine) {
-	router.GET("/api/v1/health-check", func(context *gin.Context) {
+	v1 := router.Group("/api/v1")
+	v1.GET("/health-check", func(context *gin.Context) {
 		context.String(http.StatusOK, "ok")
 	})
 
-	router.POST("/api/v1/register", func(_ *gin.Context) {
-		err := db.New(database.DB).CreateUser(context.Background(), db.CreateUserParams{
-			ID:       uuid.New().String(),
-			Username: "test user",
-			Password: "my password",
-		})
-		if err != nil {
-			fmt.Println(err.Error())
-		}
-	})
+	authApi := v1.Group("/auth")
+	authApi.POST("/register", Register)
 }
 
 type ZapWriter func([]byte) (int, error)
