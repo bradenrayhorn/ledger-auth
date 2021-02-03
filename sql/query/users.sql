@@ -7,3 +7,6 @@ INSERT INTO users (
 SELECT EXISTS (
     SELECT id FROM users WHERE username = ?
 );
+
+-- name: UsersTruncate :exec
+TRUNCATE TABLE users;

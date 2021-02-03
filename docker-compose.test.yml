@@ -1,0 +1,29 @@
+version: '3'
+
+networks:
+  test-network:
+    driver: bridge
+
+services:
+  tests:
+    build:
+      context: .
+      dockerfile: ./test.Dockerfile
+    depends_on:
+      - db
+    networks:
+      - test-network
+    volumes:
+      - ./reports:/go/src/app/reports
+  db:
+    image: mysql:8.0.23
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./sql/migrations/:/docker-entrypoint-initdb.d/
+    environment:
+      - "MYSQL_ROOT_PASSWORD=password"
+      - "MYSQL_DATABASE=ledger_auth"
+    restart: on-failure
+    networks:
+      - test-network

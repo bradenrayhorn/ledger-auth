@@ -4,4 +4,5 @@
 .idea/tasks.xml
 .idea/dataSources.xml
 .idea/sqldialects.xml
-config.yaml
+config.yml
+coverage.txt

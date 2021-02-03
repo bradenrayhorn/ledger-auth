@@ -36,3 +36,12 @@ func (q *Queries) UserExists(ctx context.Context, username string) (bool, error)
 	err := row.Scan(&exists)
 	return exists, err
 }
+
+const usersTruncate = `-- name: UsersTruncate :exec
+TRUNCATE TABLE users
+`
+
+func (q *Queries) UsersTruncate(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, usersTruncate)
+	return err
+}
