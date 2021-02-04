@@ -19,7 +19,7 @@ func LoadConfig() {
 	viper.AddConfigPath(".")
 
 	if err := viper.ReadInConfig(); err != nil {
-		panic("Failed to read config: " + err.Error())
+		log.Println("Failed to read config: " + err.Error())
 	}
 
 	viper.SetDefault("token_expiration", time.Hour*24)
