@@ -1,0 +1,24 @@
+name: Build and Push Image
+
+on:
+  repository_dispatch:
+    types: [build-image]
+
+jobs:
+
+  build:
+    name: Build Image
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Build and push to registry
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+          registry: registry.gitlab.com
+          repository: bradenr/ledger-auth
+          tags: latest

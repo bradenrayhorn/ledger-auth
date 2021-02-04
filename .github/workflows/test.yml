@@ -1,4 +1,4 @@
-name: Test Pull Request
+name: Test
 
 on:
   pull_request:
@@ -21,3 +21,10 @@ jobs:
 
       - name: Cleanup containers
         run: docker-compose -f docker-compose.test.yml down --volumes
+
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v1
+        if: github.ref == 'refs/heads/master'
+        with:
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          event-type: build-image
