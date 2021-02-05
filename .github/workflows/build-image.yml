@@ -21,4 +21,4 @@ jobs:
           password: ${{ secrets.REGISTRY_PASSWORD }}
           registry: registry.gitlab.com
           repository: bradenr/ledger-auth
-          tags: ${GITHUB_SHA::8}
+          tags: ${{ GITHUB_SHA::8 }}
