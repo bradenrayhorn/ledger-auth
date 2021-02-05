@@ -17,7 +17,7 @@ jobs:
       - name: Check Sha
         run: echo $VALUE
         env:
-          VALUE: ${{ github.sha::8 }}
+          VALUE: ${{ github.sha }}
 
       - name: Login to GitLab registry
         uses: docker/login-action@v1
@@ -32,7 +32,7 @@ jobs:
       - name: Build and push to registry
         uses: docker/build-push-action@v2
         with:
-          repository: registry.gitlab.com/bradenr/ledger-auth:${{ github.sha::8 }}
+          repository: registry.gitlab.com/bradenr/ledger-auth:${{ github.sha }}
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
