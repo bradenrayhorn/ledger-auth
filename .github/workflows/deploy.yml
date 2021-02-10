@@ -19,9 +19,7 @@ jobs:
       - name: Add Helm Repository
         uses: actions/github-script@v3
         with:
-          script: |
-            helm repo add bradenrayhorn https://bradenrayhorn.github.io/helm-charts/
-            helm repo update
+          script: helm repo add bradenrayhorn https://bradenrayhorn.github.io/helm-charts/ && helm repo update
           result-encoding: string
 
       - name: Bake Manifest
