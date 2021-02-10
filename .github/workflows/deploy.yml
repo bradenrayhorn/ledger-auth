@@ -1,0 +1,31 @@
+name: Deploy
+
+on:
+  repository_dispatch:
+    types: [deploy]
+
+jobs:
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: azure/setup-helm@v1
+        with:
+          version: '3.5.0'
+        id: install
+
+      - name: Add Helm Repository
+        uses: actions/github-script@v3
+        with:
+          script: |
+            helm repo add bradenrayhorn https://bradenrayhorn.github.io/helm-charts/
+            helm repo update
+          result-encoding: string
+
+      - name: Bake Manifest
+        uses: actions/github-script@v3
+        with:
+          script: helm template bradenrayhorn/webapp
+          result-encoding: string

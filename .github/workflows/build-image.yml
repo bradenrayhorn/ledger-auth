@@ -9,6 +9,7 @@ jobs:
   build:
     name: Build Image
     runs-on: ubuntu-latest
+    environment: production
     steps:
 
       - name: Checkout Code
@@ -29,3 +30,9 @@ jobs:
         with:
           push: true
           tags: registry.gitlab.com/bradenr/ledger-auth:${{ github.sha }}
+
+      - name: Start Deploy
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          event-type: deploy
