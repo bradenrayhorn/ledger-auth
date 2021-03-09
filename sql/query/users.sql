@@ -10,6 +10,3 @@ SELECT EXISTS (
 
 -- name: GetUserByUsername :one
 SELECT * FROM users WHERE username = ?;
-
--- name: UsersTruncate :exec
-TRUNCATE TABLE users;

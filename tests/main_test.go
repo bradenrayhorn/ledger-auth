@@ -1,10 +1,8 @@
 package tests
 
 import (
-	"context"
 	"github.com/bradenrayhorn/ledger-auth/config"
 	"github.com/bradenrayhorn/ledger-auth/database"
-	"github.com/bradenrayhorn/ledger-auth/internal/db"
 	"github.com/bradenrayhorn/ledger-auth/routing"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
@@ -25,7 +23,7 @@ func testMain(m *testing.M) int {
 
 	r = routing.MakeRouter()
 
-	_ = db.New(database.DB).UsersTruncate(context.Background())
+	database.DB.MustExec("TRUNCATE TABLE users")
 
 	return m.Run()
 }
