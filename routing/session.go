@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/bradenrayhorn/ledger-auth/database"
@@ -17,7 +19,7 @@ func createSession(w http.ResponseWriter, userID string) error {
 		return err
 	}
 	sessionID := base64.RawURLEncoding.EncodeToString(bytes)
-
+	fmt.Println(sessionID)
 	cookie := http.Cookie{
 		Name:     "session_id",
 		Value:    sessionID,
@@ -26,6 +28,14 @@ func createSession(w http.ResponseWriter, userID string) error {
 		Domain:   viper.GetString("cookie_domain"),
 		Secure:   viper.GetBool("cookie_secure"),
 		Path:     "/",
+	}
+
+	exists, err := database.RDB.Exists(context.Background(), sessionID).Result()
+	if err != nil {
+		return err
+	}
+	if exists == 1 {
+		return errors.New("failed to create session")
 	}
 
 	_, err = database.RDB.Set(context.Background(), sessionID, userID, viper.GetDuration("session_duration")).Result()

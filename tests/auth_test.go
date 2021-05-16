@@ -2,6 +2,7 @@ package tests
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -72,6 +73,27 @@ func (s *AuthSuite) TestCannotLoginWithInvalidPassword() {
 	_ = makeUser(s.T())
 
 	testLogin(s.T(), http.StatusUnprocessableEntity, "test", "password-wrong")
+}
+
+type StaticReader struct {
+}
+
+func (r StaticReader) Read(p []byte) (n int, err error) {
+	p = append(p, 5)
+	return 1, nil
+}
+
+func (s *AuthSuite) TestCannotLoginIfGeneratedSessionIDExists() {
+	_ = makeUser(s.T())
+	oldReader := rand.Reader
+	rand.Reader = StaticReader{}
+	defer func() {
+		rand.Reader = oldReader
+	}()
+
+	database.RDB.Set(context.Background(), "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "id", time.Minute)
+
+	testLogin(s.T(), http.StatusInternalServerError, "test", "password")
 }
 
 type GetMeResponse struct {
