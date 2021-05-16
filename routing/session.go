@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/bradenrayhorn/ledger-auth/database"
@@ -19,7 +18,6 @@ func createSession(w http.ResponseWriter, userID string) error {
 		return err
 	}
 	sessionID := base64.RawURLEncoding.EncodeToString(bytes)
-	fmt.Println(sessionID)
 	cookie := http.Cookie{
 		Name:     "session_id",
 		Value:    sessionID,

@@ -79,7 +79,7 @@ type StaticReader struct {
 }
 
 func (r StaticReader) Read(p []byte) (n int, err error) {
-	p = append(p, 5)
+	p = append(p, 1)
 	return 1, nil
 }
 
