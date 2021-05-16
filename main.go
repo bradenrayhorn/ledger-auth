@@ -16,6 +16,9 @@ func main() {
 	zap.S().Debug("connecting to database...")
 	database.Setup()
 
+	zap.S().Debug("connecting to redis...")
+	database.SetupRedis()
+
 	zap.S().Debug("starting ledger-auth service...")
 
 	// start http

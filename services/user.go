@@ -3,8 +3,8 @@ package services
 import (
 	"context"
 	"errors"
+
 	"github.com/bradenrayhorn/ledger-auth/internal"
-	"github.com/bradenrayhorn/ledger-auth/jwt"
 	"github.com/bradenrayhorn/ledger-auth/repositories"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -44,10 +44,5 @@ func Login(username string, password string) (string, error) {
 		return "", internal.MakeValidationError(errors.New("invalid username/password"))
 	}
 
-	token, err := jwt.CreateToken(user)
-	if err != nil {
-		return "", internal.MakeBadRequestError(err)
-	}
-
-	return token, nil
+	return user.ID, nil
 }

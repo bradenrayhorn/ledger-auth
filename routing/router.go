@@ -1,12 +1,15 @@
 package routing
 
 import (
-	"github.com/gin-contrib/zap"
-	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/gin-contrib/cors"
+	ginzap "github.com/gin-contrib/zap"
+	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 func MakeRouter() *gin.Engine {
@@ -16,6 +19,11 @@ func MakeRouter() *gin.Engine {
 	router.Use(ginzap.Ginzap(zap.L(), time.RFC3339, false))
 	router.Use(ginzap.RecoveryWithZap(zap.L(), true))
 	router.Use(ErrorReporter())
+
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowOrigins = viper.GetStringSlice("allowed_origins")
+	corsConfig.AllowCredentials = viper.GetBool("allow_credentials")
+	router.Use(cors.New(corsConfig))
 
 	applyRoutes(router)
 	return router

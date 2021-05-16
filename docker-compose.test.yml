@@ -11,6 +11,7 @@ services:
       dockerfile: ./test.Dockerfile
     depends_on:
       - db
+      - keydb
     networks:
       - test-network
     volumes:
@@ -24,6 +25,13 @@ services:
     environment:
       - "MYSQL_ROOT_PASSWORD=password"
       - "MYSQL_DATABASE=ledger_auth"
+    restart: on-failure
+    networks:
+      - test-network
+  keydb:
+    image: eqalpha/keydb:latest
+    ports:
+      - "6379:6379"
     restart: on-failure
     networks:
       - test-network

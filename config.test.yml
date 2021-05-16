@@ -3,4 +3,7 @@ mysql_port: 3306
 mysql_username: root
 mysql_password: password
 mysql_database: ledger_auth
-rsa_path: ../test_rsa
+redis_addr: keydb:6379
+redis_db: 0
+allowed_origins:
+  - "*"

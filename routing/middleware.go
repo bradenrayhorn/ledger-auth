@@ -1,12 +1,9 @@
 package routing
 
 import (
-	"github.com/bradenrayhorn/ledger-auth/jwt"
-	jwtGo "github.com/dgrijalva/jwt-go"
-	"github.com/gin-gonic/gin"
 	"net/http"
-	"net/url"
-	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 type RequestError interface {
@@ -37,36 +34,28 @@ func ErrorReporter() gin.HandlerFunc {
 	}
 }
 
-func getToken(header string) string {
-	parts := strings.Split(header, " ")
-	if len(parts) != 2 {
-		return ""
-	}
-	return parts[1]
-}
-
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		tokenString := getToken(c.GetHeader("Authorization"))
-		if len(tokenString) == 0 {
-			tokenString, _ = c.GetQuery("auth")
-			tokenString, _ = url.QueryUnescape(tokenString)
-		}
-
-		token, err := jwt.ParseToken(tokenString)
+		cookie, err := c.Request.Cookie("session_id")
 
 		if err != nil {
 			c.IndentedJSON(http.StatusUnauthorized, map[string]interface{}{
-				"error": "invalid api token",
+				"error": "invalid session",
 			})
 			c.Abort()
 			return
 		}
 
-		claims := token.Claims.(jwtGo.MapClaims)
+		userID, err := getSession(cookie.Value)
+		if err != nil {
+			c.IndentedJSON(http.StatusUnauthorized, map[string]interface{}{
+				"error": "invalid session",
+			})
+			c.Abort()
+			return
+		}
 
-		c.Set("user_id", claims["user_id"])
-		c.Set("user_username", claims["user_username"])
+		c.Set("user_id", userID)
 		c.Next()
 	}
 }

@@ -8,3 +8,4 @@ config.yml
 coverage.txt
 jwt_rsa
 jwt_rsa.pub
+ledger-auth

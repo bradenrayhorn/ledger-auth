@@ -1,10 +1,11 @@
 package routing
 
 import (
+	"net/http"
+
 	"github.com/bradenrayhorn/ledger-auth/internal"
 	"github.com/bradenrayhorn/ledger-auth/services"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 type RegisterRequest struct {
@@ -36,20 +37,21 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	token, err := services.Login(request.Username, request.Password)
+	userID, err := services.Login(request.Username, request.Password)
 	if err != nil {
 		_ = c.Error(err)
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, map[string]interface{}{
-		"token": token,
-	})
+	err = createSession(c.Writer, userID)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
 }
 
 func Me(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, map[string]interface{}{
-		"id":       c.GetString("user_id"),
-		"username": c.GetString("user_username"),
+		"id": c.GetString("user_id"),
 	})
 }

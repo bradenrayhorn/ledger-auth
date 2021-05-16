@@ -4,32 +4,41 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/bradenrayhorn/ledger-auth/database"
-	"github.com/bradenrayhorn/ledger-auth/internal/db"
-	"github.com/bradenrayhorn/ledger-auth/jwt"
-	"github.com/google/uuid"
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/bradenrayhorn/ledger-auth/database"
+	"github.com/bradenrayhorn/ledger-auth/internal/db"
+	"github.com/google/uuid"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 )
 
-func TestRegister(t *testing.T) {
+type AuthSuite struct {
+	suite.Suite
+}
+
+func (s *AuthSuite) TearDownTest() {
+	database.DB.MustExec("truncate table users")
+	database.RDB.FlushDB(context.Background())
+}
+
+func (s *AuthSuite) TestRegister() {
 	w := httptest.NewRecorder()
 	reader := strings.NewReader("username=test&password=password")
 	req, _ := http.NewRequest("POST", "/api/v1/auth/register", reader)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	r.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
+	s.Assert().Equal(http.StatusOK, w.Code)
 }
 
-func TestCannotRegisterTwice(t *testing.T) {
-	_ = makeUser(t)
+func (s *AuthSuite) TestCannotRegisterTwice() {
+	_ = makeUser(s.T())
 
 	w := httptest.NewRecorder()
 	reader := strings.NewReader("username=test&password=password")
@@ -37,76 +46,98 @@ func TestCannotRegisterTwice(t *testing.T) {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	r.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusUnprocessableEntity, w.Code)
+	s.Assert().Equal(http.StatusUnprocessableEntity, w.Code)
 }
 
-func TestCannotRegisterWithNoData(t *testing.T) {
+func (s *AuthSuite) TestCannotRegisterWithNoData() {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/api/v1/auth/register", nil)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	r.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusUnprocessableEntity, w.Code)
+	s.Assert().Equal(http.StatusUnprocessableEntity, w.Code)
 }
 
-func TestLogin(t *testing.T) {
-	_ = makeUser(t)
+func (s *AuthSuite) TestLogin() {
+	_ = makeUser(s.T())
 
-	testLogin(t, http.StatusOK, "test", "password")
+	testLogin(s.T(), http.StatusOK, "test", "password")
 }
 
-func TestCannotLoginWithInvalidUsername(t *testing.T) {
-	testLogin(t, http.StatusUnprocessableEntity, "test-bad", "password")
+func (s *AuthSuite) TestCannotLoginWithInvalidUsername() {
+	testLogin(s.T(), http.StatusUnprocessableEntity, "test-bad", "password")
 }
 
-func TestCannotLoginWithInvalidPassword(t *testing.T) {
-	_ = makeUser(t)
+func (s *AuthSuite) TestCannotLoginWithInvalidPassword() {
+	_ = makeUser(s.T())
 
-	testLogin(t, http.StatusUnprocessableEntity, "test", "password-wrong")
+	testLogin(s.T(), http.StatusUnprocessableEntity, "test", "password-wrong")
 }
 
 type GetMeResponse struct {
 	Id string `json:"id"`
 }
 
-func TestShowMe(t *testing.T) {
-	user := makeUser(t)
-
-	token, _ := jwt.CreateToken(user)
-
+func (s *AuthSuite) TestShowMe() {
+	user := makeUser(s.T())
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/api/v1/me", nil)
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	reader := strings.NewReader(fmt.Sprintf("username=%s&password=%s", "test", "password"))
+	req, _ := http.NewRequest("POST", "/api/v1/auth/login", reader)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	r.ServeHTTP(w, req)
 
-	require.Equal(t, http.StatusOK, w.Code)
+	s.Require().Equal(http.StatusOK, w.Code)
+	s.Require().Len(w.Result().Cookies(), 1)
+	s.Require().Equal("session_id", w.Result().Cookies()[0].Name)
+
+	sessionID := w.Result().Cookies()[0].Value
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest("GET", "/api/v1/me", nil)
+	req.Header.Add("Cookie", "session_id="+sessionID)
+	r.ServeHTTP(w, req)
+
+	s.Require().Equal(http.StatusOK, w.Code)
 
 	var body GetMeResponse
 	_ = json.Unmarshal(w.Body.Bytes(), &body)
-	assert.Equal(t, user.ID, body.Id)
+	s.Require().Equal(user.ID, body.Id)
 }
 
-func TestCannotShowMeUnauthenticated(t *testing.T) {
+func (s *AuthSuite) TestCannotShowMeWithExpiredSession() {
+	makeUser(s.T())
+	viper.Set("session_duration", "1s")
+	w := httptest.NewRecorder()
+	reader := strings.NewReader(fmt.Sprintf("username=%s&password=%s", "test", "password"))
+	req, _ := http.NewRequest("POST", "/api/v1/auth/login", reader)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	r.ServeHTTP(w, req)
+
+	s.Require().Equal(http.StatusOK, w.Code)
+	s.Require().Len(w.Result().Cookies(), 1)
+	s.Require().Equal("session_id", w.Result().Cookies()[0].Name)
+
+	sessionID := w.Result().Cookies()[0].Value
+
+	time.Sleep(time.Second * 2)
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest("GET", "/api/v1/me", nil)
+	req.Header.Add("Cookie", "session_id="+sessionID)
+	r.ServeHTTP(w, req)
+
+	s.Require().Equal(http.StatusUnauthorized, w.Code)
+}
+
+func (s *AuthSuite) TestCannotShowMeUnauthenticated() {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/api/v1/me", nil)
 	r.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	assert.Equal(s.T(), http.StatusUnauthorized, w.Code)
 }
 
-func TestCannotShowMeWithExpiredToken(t *testing.T) {
-	user := makeUser(t)
-
-	viper.Set("token_expiration", -10*time.Second)
-	token, _ := jwt.CreateToken(user)
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/api/v1/me", nil)
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
-	r.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusUnauthorized, w.Code)
-	viper.Set("token_expiration", 24*time.Hour)
+func TestAuthSuite(t *testing.T) {
+	suite.Run(t, new(AuthSuite))
 }
 
 func testLogin(t *testing.T, expectedStatus int, username string, password string) {
