@@ -18,6 +18,7 @@ func LoadConfig() {
 	viper.SetDefault("cookie_secure", true)
 	viper.SetDefault("allow_credentials", false)
 	viper.SetDefault("session_duration", "24h")
+	viper.SetDefault("grpc_port", "9000")
 
 	// mysql
 	_ = viper.BindEnv("mysql_host", "MYSQL_HOST")
@@ -30,4 +31,5 @@ func LoadConfig() {
 	_ = viper.BindEnv("allowed_origins", "ALLOWED_ORIGINS")
 	_ = viper.BindEnv("allow_credentials", "ALLOW_CREDENTIALS")
 	_ = viper.BindEnv("session_duration", "SESSION_DURATION")
+	_ = viper.BindEnv("grpc_port", "GRPC_PORT")
 }

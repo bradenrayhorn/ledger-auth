@@ -2,22 +2,20 @@ package routing
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/base64"
-	"errors"
 	"net/http"
 
 	"github.com/bradenrayhorn/ledger-auth/database"
+	"github.com/bradenrayhorn/ledger-auth/services"
 	"github.com/spf13/viper"
 )
 
 func createSession(w http.ResponseWriter, userID string) error {
-	bytes := make([]byte, 64)
-	_, err := rand.Read(bytes)
+	sessionService := services.NewSessionService(database.RDB)
+	sessionID, err := sessionService.CreateSession(userID)
 	if err != nil {
 		return err
 	}
-	sessionID := base64.RawURLEncoding.EncodeToString(bytes)
+
 	cookie := http.Cookie{
 		Name:     "session_id",
 		Value:    sessionID,
@@ -28,28 +26,11 @@ func createSession(w http.ResponseWriter, userID string) error {
 		Path:     "/",
 	}
 
-	exists, err := database.RDB.Exists(context.Background(), sessionID).Result()
-	if err != nil {
-		return err
-	}
-	if exists == 1 {
-		return errors.New("failed to create session")
-	}
-
-	_, err = database.RDB.Set(context.Background(), sessionID, userID, viper.GetDuration("session_duration")).Result()
-	if err != nil {
-		return err
-	}
-
 	http.SetCookie(w, &cookie)
 	return nil
 }
 
 func getSession(sessionID string) (string, error) {
-	userID, err := database.RDB.Get(context.Background(), sessionID).Result()
-	if err != nil {
-		return "", err
-	}
-
-	return userID, nil
+	sessionService := services.NewSessionService(database.RDB)
+	return sessionService.GetSession(context.Background(), sessionID)
 }

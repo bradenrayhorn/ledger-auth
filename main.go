@@ -4,6 +4,7 @@ import (
 	"github.com/bradenrayhorn/ledger-auth/config"
 	"github.com/bradenrayhorn/ledger-auth/database"
 	"github.com/bradenrayhorn/ledger-auth/routing"
+	"github.com/bradenrayhorn/ledger-auth/server"
 	"go.uber.org/zap"
 )
 
@@ -20,6 +21,10 @@ func main() {
 	database.SetupRedis()
 
 	zap.S().Debug("starting ledger-auth service...")
+
+	// start gRPC
+	grpcServer := server.NewGRPCServer(database.RDB)
+	go grpcServer.Start()
 
 	// start http
 	r := routing.MakeRouter()
