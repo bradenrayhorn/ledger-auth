@@ -49,6 +49,9 @@ func (s SessionService) GetSession(ctx context.Context, sessionID string) (strin
 	if err != nil {
 		return "", err
 	}
+	if len(userID) == 0 {
+		return "", errors.New("invalid session")
+	}
 
 	return userID, nil
 }

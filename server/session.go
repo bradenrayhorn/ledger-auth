@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"errors"
 
 	"github.com/bradenrayhorn/ledger-auth/services"
 	"github.com/bradenrayhorn/ledger-protos/session"
@@ -26,9 +25,6 @@ func (s SessionAuthenticatorServer) Authenticate(ctx context.Context, req *sessi
 	userID, err := s.sessionService.GetSession(ctx, req.GetSessionID())
 	if err != nil {
 		return response, err
-	}
-	if len(userID) == 0 {
-		return response, errors.New("invalid session")
 	}
 
 	response.Session = &session.Session{
