@@ -6,14 +6,6 @@ Auth service for the Ledger project. Handles user login and registration.
 
 Copy `config.example.yml` to `config.yml` and fill in the appropriate values.
 
-Generate or place an RSA key pair where the project will be run:
-```shell
-RUN openssl genrsa -out jwt_rsa 1024
-RUN openssl rsa -in jwt_rsa -pubout > jwt_rsa.pub
-```
-
-These will be used to generate JWTs.
-
 ### Creating Queries
 
 The [sqlc](https://github.com/kyleconroy/sqlc) library is used to generate Go functions based

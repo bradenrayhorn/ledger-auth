@@ -7,3 +7,6 @@ migrate-down:
 test:
 	docker-compose -f docker-compose.test.yml up --abort-on-container-exit --build
 	docker-compose -f docker-compose.test.yml down --volumes
+
+report:
+	go tool cover -html=./reports/coverage.txt
