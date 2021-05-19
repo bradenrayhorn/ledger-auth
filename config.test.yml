@@ -5,5 +5,6 @@ mysql_password: password
 mysql_database: ledger_auth
 redis_addr: keydb:6379
 redis_db: 0
+session_hash_key: "x"
 allowed_origins:
   - "*"
