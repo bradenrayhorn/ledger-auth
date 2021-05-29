@@ -36,6 +36,7 @@ func SetupRedis() {
 		Addr:     viper.GetString("redis_addr"),
 		Password: viper.GetString("redis_password"),
 		DB:       viper.GetInt("redis_db"),
+		Username: viper.GetString("redis_username"),
 	})
 
 	_, err := rdb.Ping(context.Background()).Result()

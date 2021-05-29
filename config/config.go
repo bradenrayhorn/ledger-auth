@@ -26,6 +26,11 @@ func LoadConfig() {
 	_ = viper.BindEnv("mysql_username", "MYSQL_USERNAME")
 	_ = viper.BindEnv("mysql_password", "MYSQL_PASSWORD")
 	_ = viper.BindEnv("mysql_database", "MYSQL_DATABASE")
+	// redis
+	_ = viper.BindEnv("redis_addr", "REDIS_ADDRESS")
+	_ = viper.BindEnv("redis_db", "REDIS_DB")
+	_ = viper.BindEnv("redis_username", "REDIS_USERNAME")
+	_ = viper.BindEnv("redis_password", "REDIS_PASSWORD")
 	// other
 	_ = viper.BindEnv("cookie_domain", "COOKIE_DOMAIN")
 	_ = viper.BindEnv("allowed_origins", "ALLOWED_ORIGINS")
