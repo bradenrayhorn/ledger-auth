@@ -19,6 +19,7 @@ func LoadConfig() {
 	viper.SetDefault("allow_credentials", false)
 	viper.SetDefault("session_duration", "24h")
 	viper.SetDefault("grpc_port", "9000")
+	viper.SetDefault("allowed_origins", "http://localhost")
 
 	// mysql
 	_ = viper.BindEnv("mysql_host", "MYSQL_HOST")

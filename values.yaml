@@ -13,6 +13,7 @@ container:
     vault.hashicorp.com/agent-inject: "true"
     vault.hashicorp.com/role: "ledger-auth"
     vault.hashicorp.com/agent-pre-populate-only: "true"
+    vault.hashicorp.com/agent-inject-secret-ca: "rootca/cert/ca"
     vault.hashicorp.com/agent-inject-secret-env: "kv/ledger/ledger-auth"
     vault.hashicorp.com/agent-inject-template-env: |
       {{ with secret "kv/ledger/ledger-auth" -}}
