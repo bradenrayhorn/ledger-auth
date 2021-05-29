@@ -38,7 +38,7 @@ func Setup() {
 	))
 
 	if err != nil {
-		zap.S().Panic(err.Error())
+		zap.S().Error(err.Error())
 	}
 
 	DB = db
@@ -60,7 +60,7 @@ func SetupRedis() {
 
 	_, err := rdb.Ping(context.Background()).Result()
 	if err != nil {
-		zap.S().Panic(err)
+		zap.S().Error(err)
 	}
 
 	RDB = rdb
