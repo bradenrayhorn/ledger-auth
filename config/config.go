@@ -38,4 +38,5 @@ func LoadConfig() {
 	_ = viper.BindEnv("session_duration", "SESSION_DURATION")
 	_ = viper.BindEnv("grpc_port", "GRPC_PORT")
 	_ = viper.BindEnv("session_hash_key", "SESION_HASH_KEY")
+	_ = viper.BindEnv("ca_cert_path", "CA_CERT_PATH")
 }
