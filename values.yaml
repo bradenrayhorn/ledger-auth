@@ -16,7 +16,7 @@ container:
     vault.hashicorp.com/agent-inject-secret-ca: "rootca/cert/ca"
     vault.hashicorp.com/agent-inject-template-ca: |
       {{ with secret "rootca/cert/ca" -}}
-          {{- .Data.data.certificate }}
+        {{- .Data }}
       {{- end }}
     vault.hashicorp.com/secret-volume-path-ca: "/app/"
     vault.hashicorp.com/agent-inject-file-ca: "ca.pem"
