@@ -16,7 +16,7 @@ container:
     vault.hashicorp.com/agent-inject-secret-ca: "rootca/cert/ca"
     vault.hashicorp.com/agent-inject-template-ca: |
       {{ with secret "rootca/cert/ca" -}}
-        {{- .Data }}
+        {{- .Data.certificate }}
       {{- end }}
     vault.hashicorp.com/agent-inject-file-ca: "ca.pem"
     vault.hashicorp.com/agent-inject-secret-env: "kv/ledger/ledger-auth"
