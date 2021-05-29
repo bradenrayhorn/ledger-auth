@@ -22,15 +22,15 @@ container:
         {{- end }}
       {{- end }}
   ports:
-  - 80
+  - 8080
   livenessProbe:
     httpGet:
       path: /health-check
-      port: 80
+      port: 8080
   readinessProbe:
     httpGet:
       path: /health-check
-      port: 80
+      port: 8080
 
 serviceAccount:
   create: true
@@ -44,7 +44,7 @@ service:
   type: ClusterIP
   ports:
   - port: 80
-    targetPort: 80
+    targetPort: 8080
     name: http
 
 ingress:
