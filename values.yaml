@@ -18,7 +18,6 @@ container:
       {{ with secret "rootca/cert/ca" -}}
         {{- .Data }}
       {{- end }}
-    vault.hashicorp.com/secret-volume-path-ca: "/app/"
     vault.hashicorp.com/agent-inject-file-ca: "ca.pem"
     vault.hashicorp.com/agent-inject-secret-env: "kv/ledger/ledger-auth"
     vault.hashicorp.com/agent-inject-template-env: |
@@ -27,7 +26,6 @@ container:
           {{- $k }}: "{{ $v }}"{{ "\n" }}
         {{- end }}
       {{- end }}
-    vault.hashicorp.com/secret-volume-path-env: "/app/"
     vault.hashicorp.com/agent-inject-file-env: "config.yml"
   ports:
   - 8080

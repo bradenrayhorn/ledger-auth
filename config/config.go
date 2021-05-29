@@ -10,6 +10,7 @@ func LoadConfig() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(".")
+	viper.AddConfigPath("/vault/secrets/")
 
 	if err := viper.ReadInConfig(); err != nil {
 		log.Println("Failed to read config: " + err.Error())
