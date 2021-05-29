@@ -30,7 +30,7 @@ func MakeRouter() *gin.Engine {
 }
 
 func applyRoutes(router *gin.Engine) {
-	router.GET("/api/v1/health-check", func(context *gin.Context) {
+	router.GET("/health-check", func(context *gin.Context) {
 		context.String(http.StatusOK, "ok")
 	})
 

@@ -1,0 +1,70 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/bradenrayhorn/ledger-auth
+  tag: ${{ github.sha }}
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: "ledger-auth"
+
+container:
+  annotations:
+    vault.hashicorp.com/agent-inject: "true"
+    vault.hashicorp.com/role: "ledger-auth"
+    vault.hashicorp.com/agent-pre-populate-only: "true"
+    vault.hashicorp.com/agent-inject-secret-env: "kv/ledger/ledger-auth"
+    vault.hashicorp.com/agent-inject-template-env: |
+      {{ with secret "kv/ledger/ledger-auth" -}}
+        {{- range $k, $v := .Data.data }}
+         {{- $k }}={{ $v }}{{ "\n" }}
+        {{- end }}
+      {{- end }}
+  ports:
+  - 80
+  livenessProbe:
+    httpGet:
+      path: /health-check
+      port: 80
+  readinessProbe:
+    httpGet:
+      path: /health-check
+      port: 80
+
+serviceAccount:
+  create: true
+  name: "ledger-auth"
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+    name: http
+
+ingress:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/redirect-entry-point: https
+  hosts:
+  - host: ${{ secrets.HOST }}
+    paths:
+    - path: /
+      port: 80
+  tls:
+  - hosts:
+    - ${{ secrets.HOST }}
+    secretName: ledger-auth-cert
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {} 

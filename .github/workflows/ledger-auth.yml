@@ -1,0 +1,81 @@
+name: Ledger Auth
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+  push:
+    branches:
+      - master
+
+jobs:
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Run tests in Docker
+        run: docker-compose -f docker-compose.test.yml up --abort-on-container-exit --build
+
+      - name: Cleanup containers
+        run: docker-compose -f docker-compose.test.yml down --volumes
+
+  build:
+    name: Build Image
+    runs-on: ubuntu-latest
+    environment: production
+    needs:
+      - test
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Login to registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build and push to registry
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: ghcr.io/bradenrayhorn/ledger-auth:${{ github.sha }}
+
+  deploy:
+    name: Deploy
+    needs:
+      - test
+      - build
+    environment: production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Deploy
+        uses: bradenrayhorn/helm@master
+        with:
+          namespace: ledger-ui
+          repository: https://bradenrayhorn.github.io/helm-charts/
+          chart: webapp
+          chart_version: 0.7.0
+          track: stable
+          helm: helm3
+          release: ledger-auth
+          version: ${{ github.sha }}
+          atomic: true
+          secrets: ${{ toJSON(secrets) }}
+          timeout: 120s
+          value-files: >-
+            [
+              "values.yaml"
+            ]
+        env:
+          KUBECONFIG_FILE: ${{ secrets.KUBECONFIG_FILE }}
