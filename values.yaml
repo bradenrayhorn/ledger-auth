@@ -14,6 +14,12 @@ container:
     vault.hashicorp.com/role: "ledger-auth"
     vault.hashicorp.com/agent-pre-populate-only: "true"
     vault.hashicorp.com/agent-inject-secret-ca: "rootca/cert/ca"
+    vault.hashicorp.com/agent-inject-template-ca: |
+      {{ with secret "rootca/cert/ca" -}}
+          {{- .Data.data.certificate }}
+      {{- end }}
+    vault.hashicorp.com/secret-volume-path-ca: "/app/"
+    vault.hashicorp.com/agent-inject-file-ca: "ca.pem"
     vault.hashicorp.com/agent-inject-secret-env: "kv/ledger/ledger-auth"
     vault.hashicorp.com/agent-inject-template-env: |
       {{ with secret "kv/ledger/ledger-auth" -}}
@@ -21,6 +27,8 @@ container:
           {{- $k }}: "{{ $v }}"{{ "\n" }}
         {{- end }}
       {{- end }}
+    vault.hashicorp.com/secret-volume-path-env: "/app/"
+    vault.hashicorp.com/agent-inject-file-env: "config.yml"
   ports:
   - 8080
   livenessProbe:
