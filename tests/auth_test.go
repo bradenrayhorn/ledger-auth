@@ -102,19 +102,10 @@ type GetMeResponse struct {
 
 func (s *AuthSuite) TestShowMe() {
 	user := makeUser(s.T())
+	sessionID := getSessionID(s, user)
+
 	w := httptest.NewRecorder()
-	reader := strings.NewReader(fmt.Sprintf("username=%s&password=%s", "test", "password"))
-	req, _ := http.NewRequest("POST", "/api/v1/auth/login", reader)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	r.ServeHTTP(w, req)
-
-	s.Require().Equal(http.StatusOK, w.Code)
-	s.Require().Len(w.Result().Cookies(), 1)
-	s.Require().Equal("session_id", w.Result().Cookies()[0].Name)
-
-	sessionID := w.Result().Cookies()[0].Value
-	w = httptest.NewRecorder()
-	req, _ = http.NewRequest("GET", "/api/v1/me", nil)
+	req, _ := http.NewRequest("GET", "/api/v1/me", nil)
 	req.Header.Add("Cookie", "session_id="+sessionID)
 	r.ServeHTTP(w, req)
 
@@ -126,24 +117,15 @@ func (s *AuthSuite) TestShowMe() {
 }
 
 func (s *AuthSuite) TestCannotShowMeWithExpiredSession() {
-	makeUser(s.T())
+	user := makeUser(s.T())
 	viper.Set("session_duration", "1s")
-	w := httptest.NewRecorder()
-	reader := strings.NewReader(fmt.Sprintf("username=%s&password=%s", "test", "password"))
-	req, _ := http.NewRequest("POST", "/api/v1/auth/login", reader)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	r.ServeHTTP(w, req)
 
-	s.Require().Equal(http.StatusOK, w.Code)
-	s.Require().Len(w.Result().Cookies(), 1)
-	s.Require().Equal("session_id", w.Result().Cookies()[0].Name)
-
-	sessionID := w.Result().Cookies()[0].Value
+	sessionID := getSessionID(s, user)
 
 	time.Sleep(time.Second * 2)
 
-	w = httptest.NewRecorder()
-	req, _ = http.NewRequest("GET", "/api/v1/me", nil)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/v1/me", nil)
 	req.Header.Add("Cookie", "session_id="+sessionID)
 	r.ServeHTTP(w, req)
 
@@ -156,6 +138,25 @@ func (s *AuthSuite) TestCannotShowMeUnauthenticated() {
 	r.ServeHTTP(w, req)
 
 	assert.Equal(s.T(), http.StatusUnauthorized, w.Code)
+}
+
+func (s *AuthSuite) TestLogout() {
+	user := makeUser(s.T())
+	sessionID := getSessionID(s, user)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/api/v1/auth/logout", nil)
+	req.Header.Add("Cookie", "session_id="+sessionID)
+	r.ServeHTTP(w, req)
+
+	s.Require().Equal(http.StatusOK, w.Code)
+	s.Require().Len(w.Result().Cookies(), 1)
+	s.Require().Equal("session_id", w.Result().Cookies()[0].Name)
+	s.Require().True(w.Result().Cookies()[0].Expires.Before(time.Now()))
+
+	exists, err := database.RDB.Exists(context.Background(), sessionID).Result()
+	s.Require().Nil(err)
+	s.Require().Equal(int64(0), exists)
 }
 
 func TestAuthSuite(t *testing.T) {
@@ -187,4 +188,18 @@ func makeUser(t *testing.T) db.User {
 	})
 	assert.Nil(t, err)
 	return user
+}
+
+func getSessionID(s *AuthSuite, user db.User) string {
+	w := httptest.NewRecorder()
+	reader := strings.NewReader(fmt.Sprintf("username=%s&password=%s", user.Username, "password"))
+	req, _ := http.NewRequest("POST", "/api/v1/auth/login", reader)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	r.ServeHTTP(w, req)
+
+	s.Require().Equal(http.StatusOK, w.Code)
+	s.Require().Len(w.Result().Cookies(), 1)
+	s.Require().Equal("session_id", w.Result().Cookies()[0].Name)
+
+	return w.Result().Cookies()[0].Value
 }

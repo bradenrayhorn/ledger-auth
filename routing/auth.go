@@ -50,6 +50,14 @@ func Login(c *gin.Context) {
 	}
 }
 
+func Logout(c *gin.Context) {
+	err := deleteSession(c.Writer, c.GetString("session_id"))
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+}
+
 func Me(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, map[string]interface{}{
 		"id": c.GetString("user_id"),

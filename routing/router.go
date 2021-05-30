@@ -42,6 +42,7 @@ func applyRoutes(router *gin.Engine) {
 	authApi.POST("/login", Login)
 
 	api.GET("/me", Me)
+	api.POST("/auth/logout", Logout)
 }
 
 type ZapWriter func([]byte) (int, error)

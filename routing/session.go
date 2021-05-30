@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/bradenrayhorn/ledger-auth/database"
 	"github.com/bradenrayhorn/ledger-auth/services"
@@ -48,23 +49,46 @@ func createSession(w http.ResponseWriter, userID string) error {
 	return nil
 }
 
-func getSession(cookieValueString string) (string, error) {
+func getSession(cookieValueString string) (string, string, error) {
 	decodedCookie, err := base64.RawURLEncoding.DecodeString(cookieValueString)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	var cookieValue CookieValue
 	if err = json.Unmarshal(decodedCookie, &cookieValue); err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	if getHMACService().ValidateSignature([]byte(cookieValue.SessionID), cookieValue.Signature) != nil {
-		return "", err
+		return "", "", err
 	}
 
 	sessionService := services.NewSessionService(database.RDB)
-	return sessionService.GetSession(context.Background(), cookieValue.SessionID)
+	userID, err := sessionService.GetSession(context.Background(), cookieValue.SessionID)
+	return cookieValue.SessionID, userID, err
+}
+
+func deleteSession(w http.ResponseWriter, sessionID string) error {
+	sessionService := services.NewSessionService(database.RDB)
+	err := sessionService.DeleteSession(context.Background(), sessionID)
+
+	if err != nil {
+		return err
+	}
+
+	cookie := http.Cookie{
+		Name:     "session_id",
+		Expires:  time.Unix(0, 0),
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+		Domain:   viper.GetString("cookie_domain"),
+		Secure:   viper.GetBool("cookie_secure"),
+		Path:     "/",
+	}
+
+	http.SetCookie(w, &cookie)
+	return nil
 }
 
 func getHMACService() services.HMACService {

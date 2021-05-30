@@ -55,3 +55,7 @@ func (s SessionService) GetSession(ctx context.Context, sessionID string) (strin
 
 	return userID, nil
 }
+
+func (s SessionService) DeleteSession(ctx context.Context, sessionID string) error {
+	return s.rdb.Del(ctx, sessionID).Err()
+}
