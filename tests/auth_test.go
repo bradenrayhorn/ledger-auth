@@ -66,13 +66,13 @@ func (s *AuthSuite) TestLogin() {
 }
 
 func (s *AuthSuite) TestCannotLoginWithInvalidUsername() {
-	testLogin(s.T(), http.StatusUnprocessableEntity, "test-bad", "password")
+	testLogin(s.T(), http.StatusUnauthorized, "test-bad", "password")
 }
 
 func (s *AuthSuite) TestCannotLoginWithInvalidPassword() {
 	_ = makeUser(s.T())
 
-	testLogin(s.T(), http.StatusUnprocessableEntity, "test", "password-wrong")
+	testLogin(s.T(), http.StatusUnauthorized, "test", "password-wrong")
 }
 
 type StaticReader struct {

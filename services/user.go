@@ -36,12 +36,12 @@ func RegisterUser(username string, password string) error {
 func Login(username string, password string) (string, error) {
 	user, err := repositories.GetUserByUsername(context.Background(), username)
 	if err != nil {
-		return "", internal.MakeValidationError(errors.New("invalid username/password"))
+		return "", internal.MakeAuthenticationError(errors.New("invalid username/password"))
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		return "", internal.MakeValidationError(errors.New("invalid username/password"))
+		return "", internal.MakeAuthenticationError(errors.New("invalid username/password"))
 	}
 
 	return user.ID, nil

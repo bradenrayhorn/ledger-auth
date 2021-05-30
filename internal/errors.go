@@ -35,3 +35,19 @@ func (e ValidationError) Code() int {
 func MakeValidationError(error error) ValidationError {
 	return ValidationError{error: error}
 }
+
+// Authentication
+
+type AuthenticationError struct{ error error }
+
+func (e AuthenticationError) Error() string {
+	return e.error.Error()
+}
+
+func (e AuthenticationError) Code() int {
+	return http.StatusUnauthorized
+}
+
+func MakeAuthenticationError(error error) AuthenticationError {
+	return AuthenticationError{error: error}
+}
