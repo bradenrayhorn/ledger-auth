@@ -23,7 +23,6 @@ func MakeRouter() *gin.Engine {
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = viper.GetStringSlice("allowed_origins")
 	corsConfig.AllowCredentials = viper.GetBool("allow_credentials")
-	corsConfig.AddAllowHeaders("set-cookie")
 	router.Use(cors.New(corsConfig))
 
 	applyRoutes(router)

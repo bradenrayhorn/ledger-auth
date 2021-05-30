@@ -38,7 +38,7 @@ func createSession(w http.ResponseWriter, userID string) error {
 		Name:     "session_id",
 		Value:    base64.RawURLEncoding.EncodeToString(value),
 		HttpOnly: true,
-		SameSite: http.SameSiteNoneMode,
+		SameSite: http.SameSiteStrictMode,
 		Domain:   viper.GetString("cookie_domain"),
 		Secure:   viper.GetBool("cookie_secure"),
 		Path:     "/",
