@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+type ActiveSession struct {
+	SessionID string
+	UserID    string
+	CreatedAt time.Time
+}
+
 type User struct {
 	ID        string
 	Username  string

@@ -35,6 +35,7 @@ func (s *SessionSuite) SetupTest() {
 
 func (s *SessionSuite) TearDownTest() {
 	database.DB.MustExec("truncate table users")
+	database.DB.MustExec("truncate table active_sessions")
 	database.RDB.FlushDB(context.Background())
 }
 

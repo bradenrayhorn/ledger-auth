@@ -7,6 +7,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/bradenrayhorn/ledger-auth/repositories"
 	"github.com/go-redis/redis/v8"
 	"github.com/spf13/viper"
 )
@@ -42,6 +43,11 @@ func (s SessionService) CreateSession(userID string, data SessionData) (string, 
 		return "", errors.New("failed to create session")
 	}
 
+	err = repositories.CreateActiveSession(context.Background(), userID, sessionID)
+	if err != nil {
+		return "", err
+	}
+
 	_, err = s.rdb.HSet(context.Background(), sessionID, makeSessionHash(userID, data)).Result()
 	if err != nil {
 		return "", err
@@ -74,6 +80,38 @@ func (s SessionService) GetSession(ctx context.Context, sessionID string, data S
 
 func (s SessionService) DeleteSession(ctx context.Context, sessionID string) error {
 	return s.rdb.Del(ctx, sessionID).Err()
+}
+
+func (s SessionService) GetActiveSessions(ctx context.Context, userID string) ([]map[string]interface{}, error) {
+	formattedSessions := []map[string]interface{}{}
+	sessions, err := repositories.GetActiveSessions(ctx, userID)
+	if err != nil {
+		return formattedSessions, nil
+	}
+
+	var results []*redis.StringStringMapCmd
+
+	_, err = s.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+		for _, session := range sessions {
+			results = append(results, pipe.HGetAll(ctx, session.SessionID))
+		}
+		return nil
+	})
+
+	if err != nil {
+		return formattedSessions, nil
+	}
+
+	for i, v := range results {
+		formattedSessions = append(formattedSessions, map[string]interface{}{
+			"ip":            v.Val()["ip"],
+			"user_agent":    v.Val()["user_agent"],
+			"last_accessed": v.Val()["last_accessed"],
+			"created_at":    sessions[i].CreatedAt.Format(time.RFC3339),
+		})
+	}
+
+	return formattedSessions, nil
 }
 
 func makeSessionHash(userID string, data SessionData) map[string]interface{} {
