@@ -102,13 +102,26 @@ func (s SessionService) GetActiveSessions(ctx context.Context, userID string) ([
 		return formattedSessions, nil
 	}
 
+	expiredSessions := []string{}
+
 	for i, v := range results {
-		formattedSessions = append(formattedSessions, map[string]interface{}{
-			"ip":            v.Val()["ip"],
-			"user_agent":    v.Val()["user_agent"],
-			"last_accessed": v.Val()["last_accessed"],
-			"created_at":    sessions[i].CreatedAt.Format(time.RFC3339),
-		})
+		if len(v.Val()) > 0 {
+			formattedSessions = append(formattedSessions, map[string]interface{}{
+				"ip":            v.Val()["ip"],
+				"user_agent":    v.Val()["user_agent"],
+				"last_accessed": v.Val()["last_accessed"],
+				"created_at":    sessions[i].CreatedAt.Format(time.RFC3339),
+			})
+		} else {
+			expiredSessions = append(expiredSessions, sessions[i].SessionID)
+		}
+	}
+
+	if len(expiredSessions) > 0 {
+		err = repositories.DeleteActiveSessions(ctx, expiredSessions)
+		if err != nil {
+			return formattedSessions, err
+		}
 	}
 
 	return formattedSessions, nil
