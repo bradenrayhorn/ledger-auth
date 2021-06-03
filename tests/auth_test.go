@@ -196,8 +196,6 @@ func getSessionID(s *suite.Suite, user db.User) string {
 	reader := strings.NewReader(fmt.Sprintf("username=%s&password=%s", user.Username, "password"))
 	req, _ := http.NewRequest("POST", "/api/v1/auth/login", reader)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("User-Agent", "TestUserAgent")
-	req.Header.Set("X-Forwarded-For", "1.2.3.4")
 	r.ServeHTTP(w, req)
 
 	s.Require().Equal(http.StatusOK, w.Code)

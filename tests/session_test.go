@@ -35,11 +35,12 @@ type GetSessionsResponseSession struct {
 func (s *SessionHTTPSuite) TestGetSessions() {
 	user := makeUser(s.T())
 	sessionID1 := getSessionID(&s.Suite, user)
-	_ = getSessionID(&s.Suite, user)
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/api/v1/sessions", nil)
 	req.Header.Add("Cookie", "session_id="+sessionID1)
+	req.Header.Add("User-Agent", "TestUserAgent")
+	req.Header.Add("X-Forwarded-For", "1.2.3.4")
 	r.ServeHTTP(w, req)
 
 	s.Require().Equal(http.StatusOK, w.Code)
@@ -47,7 +48,9 @@ func (s *SessionHTTPSuite) TestGetSessions() {
 	var body GetSessionsResponse
 	_ = json.Unmarshal(w.Body.Bytes(), &body)
 
-	s.Require().Len(body.Sessions, 2)
+	s.Require().Len(body.Sessions, 1)
+	s.Require().Equal("TestUserAgent", body.Sessions[0].UserAgent)
+	s.Require().Equal("1.2.3.4", body.Sessions[0].IP)
 }
 
 func TestSessionHTTPSuite(t *testing.T) {
