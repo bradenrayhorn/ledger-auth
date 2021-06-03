@@ -43,7 +43,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	err = createSession(c.Writer, userID)
+	err = createSession(c.Writer, userID, c.ClientIP(), c.Request.UserAgent())
 	if err != nil {
 		_ = c.Error(err)
 		return

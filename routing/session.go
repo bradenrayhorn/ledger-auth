@@ -17,9 +17,12 @@ type CookieValue struct {
 	Signature []byte
 }
 
-func createSession(w http.ResponseWriter, userID string) error {
+func createSession(w http.ResponseWriter, userID string, ip string, userAgent string) error {
 	sessionService := services.NewSessionService(database.RDB)
-	sessionID, err := sessionService.CreateSession(userID)
+	sessionID, err := sessionService.CreateSession(userID, services.SessionData{
+		IP:        ip,
+		UserAgent: userAgent,
+	})
 	if err != nil {
 		return err
 	}
@@ -49,7 +52,7 @@ func createSession(w http.ResponseWriter, userID string) error {
 	return nil
 }
 
-func getSession(cookieValueString string) (string, string, error) {
+func getSession(cookieValueString string, ip string, userAgent string) (string, string, error) {
 	decodedCookie, err := base64.RawURLEncoding.DecodeString(cookieValueString)
 	if err != nil {
 		return "", "", err
@@ -65,7 +68,10 @@ func getSession(cookieValueString string) (string, string, error) {
 	}
 
 	sessionService := services.NewSessionService(database.RDB)
-	userID, err := sessionService.GetSession(context.Background(), cookieValue.SessionID)
+	userID, err := sessionService.GetSession(context.Background(), cookieValue.SessionID, services.SessionData{
+		IP:        ip,
+		UserAgent: userAgent,
+	})
 	return cookieValue.SessionID, userID, err
 }
 

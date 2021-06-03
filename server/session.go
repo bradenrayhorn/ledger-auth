@@ -22,7 +22,10 @@ func NewSessionAuthenticatorServer(client *redis.Client) SessionAuthenticatorSer
 func (s SessionAuthenticatorServer) Authenticate(ctx context.Context, req *session.SessionAuthenticateRequest) (*session.SessionAuthenticateResponse, error) {
 	response := &session.SessionAuthenticateResponse{}
 
-	userID, err := s.sessionService.GetSession(ctx, req.GetSessionID())
+	userID, err := s.sessionService.GetSession(ctx, req.GetSessionID(), services.SessionData{
+		IP:        req.GetIP(),
+		UserAgent: req.GetUserAgent(),
+	})
 	if err != nil {
 		return response, err
 	}

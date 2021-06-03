@@ -3,7 +3,7 @@ module github.com/bradenrayhorn/ledger-auth
 go 1.16
 
 require (
-	github.com/bradenrayhorn/ledger-protos v0.0.0-20210516151140-f082cd637e1e
+	github.com/bradenrayhorn/ledger-protos v0.2.0
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-contrib/zap v0.0.1
 	github.com/gin-gonic/gin v1.6.3

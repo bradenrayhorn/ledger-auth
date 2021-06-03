@@ -44,20 +44,33 @@ func (s *SessionSuite) bufDialer(context.Context, string) (net.Conn, error) {
 
 func (s *SessionSuite) TestCanGetActiveSession() {
 	ctx := context.Background()
-	database.RDB.Set(ctx, "1234", "my user id", time.Hour)
+	database.RDB.HSet(ctx, "1234", map[string]interface{}{
+		"user_id":       "my user id",
+		"ip":            "18.8.9.1",
+		"user_agent":    "TestAgent",
+		"last_accessed": time.Now().Add(time.Minute * -10),
+	})
 
 	conn, err := grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(s.bufDialer), grpc.WithInsecure())
 	s.Require().Nil(err)
 	defer conn.Close()
 
 	client := session.NewSessionAuthenticatorClient(conn)
-	resp, err := client.Authenticate(ctx, &session.SessionAuthenticateRequest{SessionID: "1234"})
+	resp, err := client.Authenticate(ctx, &session.SessionAuthenticateRequest{SessionID: "1234", UserAgent: "NewAgent", IP: "1.1.1.1"})
 
 	s.Require().Nil(err)
 	s.Require().NotNil(resp)
 	s.Require().NotNil(resp.Session)
 	s.Require().Equal("my user id", resp.Session.UserID)
 	s.Require().Equal("1234", resp.Session.SessionID)
+
+	res, err := database.RDB.HGetAll(ctx, "1234").Result()
+	s.Require().Nil(err)
+	s.Require().Equal("1.1.1.1", res["ip"])
+	s.Require().Equal("NewAgent", res["user_agent"])
+	lastAccess, err := time.Parse(time.RFC3339, res["last_accessed"])
+	s.Require().Nil(err)
+	s.Require().True(lastAccess.After(time.Now().Add(time.Minute * -5)))
 }
 
 func (s *SessionSuite) TestCannotGetNonExistantSession() {

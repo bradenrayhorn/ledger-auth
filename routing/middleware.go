@@ -46,7 +46,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		sessionID, userID, err := getSession(cookie.Value)
+		sessionID, userID, err := getSession(cookie.Value, c.ClientIP(), c.Request.UserAgent())
 		if err != nil {
 			c.IndentedJSON(http.StatusUnauthorized, map[string]interface{}{
 				"error": "invalid session",

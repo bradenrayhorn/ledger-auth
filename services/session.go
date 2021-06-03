@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/spf13/viper"
@@ -20,7 +21,12 @@ func NewSessionService(client *redis.Client) SessionService {
 	}
 }
 
-func (s SessionService) CreateSession(userID string) (string, error) {
+type SessionData struct {
+	IP        string
+	UserAgent string
+}
+
+func (s SessionService) CreateSession(userID string, data SessionData) (string, error) {
 	bytes := make([]byte, 64)
 	_, err := rand.Read(bytes)
 	if err != nil {
@@ -36,7 +42,12 @@ func (s SessionService) CreateSession(userID string) (string, error) {
 		return "", errors.New("failed to create session")
 	}
 
-	_, err = s.rdb.Set(context.Background(), sessionID, userID, viper.GetDuration("session_duration")).Result()
+	_, err = s.rdb.HSet(context.Background(), sessionID, makeSessionHash(userID, data)).Result()
+	if err != nil {
+		return "", err
+	}
+
+	err = s.rdb.Expire(context.Background(), sessionID, viper.GetDuration("session_duration")).Err()
 	if err != nil {
 		return "", err
 	}
@@ -44,18 +55,32 @@ func (s SessionService) CreateSession(userID string) (string, error) {
 	return sessionID, nil
 }
 
-func (s SessionService) GetSession(ctx context.Context, sessionID string) (string, error) {
-	userID, err := s.rdb.Get(ctx, sessionID).Result()
+func (s SessionService) GetSession(ctx context.Context, sessionID string, data SessionData) (string, error) {
+	sessionData, err := s.rdb.HGetAll(ctx, sessionID).Result()
 	if err != nil {
 		return "", err
 	}
-	if len(userID) == 0 {
+	if len(sessionData) == 0 || len(sessionData["user_id"]) == 0 {
 		return "", errors.New("invalid session")
 	}
 
-	return userID, nil
+	err = s.rdb.HSet(context.Background(), sessionID, makeSessionHash(sessionData["user_id"], data)).Err()
+	if err != nil {
+		return "", err
+	}
+
+	return sessionData["user_id"], nil
 }
 
 func (s SessionService) DeleteSession(ctx context.Context, sessionID string) error {
 	return s.rdb.Del(ctx, sessionID).Err()
+}
+
+func makeSessionHash(userID string, data SessionData) map[string]interface{} {
+	return map[string]interface{}{
+		"user_id":       userID,
+		"ip":            data.IP,
+		"user_agent":    data.UserAgent,
+		"last_accessed": time.Now().Format(time.RFC3339),
+	}
 }
