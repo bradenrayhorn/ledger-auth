@@ -16,6 +16,7 @@ func MakeRouter() *gin.Engine {
 	gin.DefaultWriter = makeZapWriter()
 	router := gin.New()
 	router.TrustedProxies = viper.GetStringSlice("trusted_proxies")
+	router.RemoteIPHeaders = []string{"X-Forwarded-For"}
 
 	router.Use(ginzap.Ginzap(zap.L(), time.RFC3339, false))
 	router.Use(ginzap.RecoveryWithZap(zap.L(), true))

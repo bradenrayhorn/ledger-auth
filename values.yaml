@@ -58,6 +58,7 @@ ingress:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     traefik.ingress.kubernetes.io/redirect-entry-point: https
+    ingress.kubernetes.io/custom-request-headers: 'X-Forwarded-For:|X-Real-IP:'
   hosts:
   - host: ${{ secrets.HOST }}
     paths:

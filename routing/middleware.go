@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 )
 
 type RequestError interface {
@@ -46,11 +45,6 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-
-		zap.S().Info(c.Request.RemoteAddr)
-		zap.S().Info(c.RemoteIP())
-		zap.S().Info(c.ClientIP())
-		zap.S().Info(c.Request.Header)
 
 		sessionID, userID, err := getSession(cookie.Value, c.ClientIP(), c.Request.UserAgent())
 		if err != nil {
