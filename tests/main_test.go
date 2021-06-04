@@ -20,6 +20,8 @@ func TestMain(m *testing.M) {
 func testMain(m *testing.M) int {
 	viper.AddConfigPath("../")
 	config.LoadConfig()
+	viper.Set("trusted_proxies", []string{"0.0.0.0/0"})
+
 	database.Setup()
 	database.SetupRedis()
 

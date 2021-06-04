@@ -42,7 +42,7 @@ func (s *SessionHTTPSuite) TestGetSessions() {
 	req, _ := http.NewRequest("GET", "/api/v1/sessions", nil)
 	req.Header.Add("Cookie", "session_id="+sessionID1)
 	req.Header.Add("User-Agent", "TestUserAgent")
-	req.Header.Add("X-Forwarded-For", "1.2.3.4")
+	req.RemoteAddr = "1.2.3.4:80"
 	r.ServeHTTP(w, req)
 
 	s.Require().Equal(http.StatusOK, w.Code)
