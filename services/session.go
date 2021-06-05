@@ -3,8 +3,10 @@ package services
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/bradenrayhorn/ledger-auth/repositories"
@@ -107,6 +109,7 @@ func (s SessionService) GetActiveSessions(ctx context.Context, userID string) ([
 	for i, v := range results {
 		if len(v.Val()) > 0 {
 			formattedSessions = append(formattedSessions, map[string]interface{}{
+				"identifier":    fmt.Sprintf("%x", sha256.Sum256([]byte(sessions[i].SessionID))),
 				"ip":            v.Val()["ip"],
 				"user_agent":    v.Val()["user_agent"],
 				"last_accessed": v.Val()["last_accessed"],
