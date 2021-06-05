@@ -13,6 +13,7 @@ import (
 
 	"github.com/bradenrayhorn/ledger-auth/database"
 	"github.com/bradenrayhorn/ledger-auth/internal/db"
+	"github.com/bradenrayhorn/ledger-auth/routing"
 	"github.com/google/uuid"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +27,7 @@ type AuthSuite struct {
 func (s *AuthSuite) TearDownTest() {
 	database.DB.MustExec("truncate table users")
 	database.DB.MustExec("truncate table active_sessions")
-	database.RDB.FlushDB(context.Background())
+	database.RDB.FlushAll(context.Background())
 }
 
 func (s *AuthSuite) TestRegister() {
@@ -74,6 +75,20 @@ func (s *AuthSuite) TestCannotLoginWithInvalidPassword() {
 	_ = makeUser(s.T())
 
 	testLogin(s.T(), http.StatusUnauthorized, "test", "password-wrong")
+}
+
+func (s *AuthSuite) TestAuthRouteIsRateLimited() {
+	_ = makeUser(s.T())
+	viper.Set("rate_limit_auth", "1")
+
+	oldR := r
+	r = routing.MakeRouter()
+	defer func() {
+		r = oldR
+	}()
+
+	testLogin(s.T(), http.StatusOK, "test", "password")
+	testLogin(s.T(), http.StatusTooManyRequests, "test", "password")
 }
 
 type StaticReader struct {

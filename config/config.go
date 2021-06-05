@@ -22,6 +22,8 @@ func LoadConfig() {
 	viper.SetDefault("grpc_port", "9000")
 	viper.SetDefault("allowed_origins", "http://localhost")
 	viper.SetDefault("trusted_proxies", "10.0.0.0/8")
+	viper.SetDefault("rate_limit_auth", "6")
+	viper.SetDefault("rate_limit_standard", "100")
 
 	// mysql
 	_ = viper.BindEnv("mysql_host", "MYSQL_HOST")

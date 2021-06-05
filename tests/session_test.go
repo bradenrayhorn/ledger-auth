@@ -18,7 +18,7 @@ type SessionHTTPSuite struct {
 func (s *SessionHTTPSuite) TearDownTest() {
 	database.DB.MustExec("truncate table users")
 	database.DB.MustExec("truncate table active_sessions")
-	database.RDB.FlushDB(context.Background())
+	database.RDB.FlushAll(context.Background())
 }
 
 type GetSessionsResponse struct {
