@@ -10,7 +10,6 @@ import (
 	"github.com/bradenrayhorn/ledger-auth/database"
 	"github.com/bradenrayhorn/ledger-auth/repositories"
 	"github.com/bradenrayhorn/ledger-auth/services"
-	"github.com/google/uuid"
 	"github.com/sendgrid/rest"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 	"github.com/stretchr/testify/mock"
@@ -73,25 +72,6 @@ func (s *UserTestSuite) TestCanUpdateUserWithEmail() {
 	user, err := repositories.GetUserByID(context.Background(), user.ID)
 	s.Require().Nil(err)
 	s.Assert().Equal("test@test.com", user.Email.String)
-}
-
-func (s *UserTestSuite) TestCannotUpdateUserWithSameEmail() {
-	user := makeUser(s.T())
-	sessionID := getSessionID(&s.Suite, user)
-
-	database.DB.MustExec("INSERT INTO users (id, username, password, email) VALUES (?, ?, ?, ?)", uuid.NewString(), "user2", "x", "test@test.com")
-
-	w := httptest.NewRecorder()
-	reader := strings.NewReader("email=test@test.com")
-	req, _ := http.NewRequest("POST", "/api/v1/me/email", reader)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("Cookie", "session_id="+sessionID)
-	r.ServeHTTP(w, req)
-
-	s.Assert().Equal(http.StatusInternalServerError, w.Code)
-	dbUser, err := repositories.GetUserByID(context.Background(), user.ID)
-	s.Require().Nil(err)
-	s.Assert().False(dbUser.Email.Valid)
 }
 
 func TestUserSuite(t *testing.T) {

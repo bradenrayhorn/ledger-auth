@@ -5,6 +5,5 @@ CREATE TABLE users (
     email VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    UNIQUE KEY unique_username (username),
-    UNIQUE KEY unique_email (email)
+    UNIQUE KEY unique_username (username)
 );
