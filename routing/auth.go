@@ -1,9 +1,11 @@
 package routing
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/bradenrayhorn/ledger-auth/internal"
+	"github.com/bradenrayhorn/ledger-auth/repositories"
 	"github.com/bradenrayhorn/ledger-auth/services"
 	"github.com/gin-gonic/gin"
 )
@@ -59,7 +61,19 @@ func Logout(c *gin.Context) {
 }
 
 func Me(c *gin.Context) {
+	user, err := repositories.GetUserByID(context.Background(), c.GetString("user_id"))
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	var email *string
+	if user.Email.Valid {
+		email = &user.Email.String
+	}
+
 	c.IndentedJSON(http.StatusOK, map[string]interface{}{
-		"id": c.GetString("user_id"),
+		"id":    c.GetString("user_id"),
+		"email": email,
 	})
 }

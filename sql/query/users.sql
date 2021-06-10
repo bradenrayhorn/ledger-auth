@@ -10,3 +10,9 @@ SELECT EXISTS (
 
 -- name: GetUserByUsername :one
 SELECT * FROM users WHERE username = ?;
+
+-- name: GetUserByID :one
+SELECT * FROM users where id = ?;
+
+-- name: UpdateUserEmail :exec
+UPDATE users SET email = ? WHERE id = ?;

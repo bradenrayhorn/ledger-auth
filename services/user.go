@@ -10,6 +10,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+var ServiceMailClient MailClient
+
 func RegisterUser(username string, password string) error {
 	exists, err := repositories.UserExists(context.Background(), username)
 	if err != nil {
@@ -45,4 +47,13 @@ func Login(username string, password string) (string, error) {
 	}
 
 	return user.ID, nil
+}
+
+func UpdateEmail(userID string, email string) error {
+	err := repositories.UpdateUserEmail(context.Background(), userID, email)
+	if err != nil {
+		return err
+	}
+
+	return NewEmailService(ServiceMailClient).SendEmail("Ledger Security Notice", "This email was added to your Ledger account to receive security notices.", email)
 }
