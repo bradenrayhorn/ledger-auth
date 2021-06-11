@@ -16,15 +16,6 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-type mockMailClient struct {
-	mock.Mock
-}
-
-func (c *mockMailClient) Send(message *mail.SGMailV3) (*rest.Response, error) {
-	args := c.Called(message)
-	return args.Get(0).(*rest.Response), args.Error(1)
-}
-
 type UserTestSuite struct {
 	suite.Suite
 	mockMail *mockMailClient
