@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/bradenrayhorn/ledger-auth/database"
 	"github.com/bradenrayhorn/ledger-auth/internal"
 	"github.com/bradenrayhorn/ledger-auth/repositories"
 	"github.com/bradenrayhorn/ledger-auth/services"
@@ -39,13 +40,48 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	userID, err := services.Login(request.Username, request.Password)
+	// add device id if needed
+	cookie, err := c.Request.Cookie("device_id")
+	var deviceID string
+	if err != nil {
+		newDeviceID, err := createDeviceCookie(c.Writer)
+		if err != nil {
+			_ = c.Error(err)
+			return
+		}
+		deviceID = newDeviceID
+	} else {
+		deviceID = cookie.Value
+	}
+
+	// login user
+	user, err := services.Login(request.Username, request.Password)
 	if err != nil {
 		_ = c.Error(err)
 		return
 	}
 
-	err = createSession(c.Writer, userID, c.ClientIP(), c.Request.UserAgent())
+	deviceService := services.NewDeviceService(database.RDB)
+	// check if device is recognized
+	isRecognized, err := deviceService.DoesRecognizeDevice(context.Background(), user.ID, deviceID)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	} else if !isRecognized {
+		if err = deviceService.NotifyOfNewDevice(*user, c.ClientIP()); err != nil {
+			_ = c.Error(err)
+			return
+		}
+	}
+
+	// recognize device
+	err = deviceService.RecognizeDevice(context.Background(), user.ID, deviceID)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	err = createSession(c.Writer, user.ID, c.ClientIP(), c.Request.UserAgent())
 	if err != nil {
 		_ = c.Error(err)
 		return

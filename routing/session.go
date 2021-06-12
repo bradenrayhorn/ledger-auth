@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"net/http"
-	"time"
 
 	"github.com/bradenrayhorn/ledger-auth/database"
 	"github.com/bradenrayhorn/ledger-auth/services"
@@ -100,7 +99,7 @@ func deleteSession(w http.ResponseWriter, sessionID string) error {
 
 	cookie := http.Cookie{
 		Name:     "session_id",
-		Expires:  time.Unix(0, 0),
+		MaxAge:   -1,
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
 		Domain:   viper.GetString("cookie_domain"),

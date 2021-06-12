@@ -14,9 +14,13 @@ import (
 	"github.com/bradenrayhorn/ledger-auth/database"
 	"github.com/bradenrayhorn/ledger-auth/internal/db"
 	"github.com/bradenrayhorn/ledger-auth/routing"
+	"github.com/bradenrayhorn/ledger-auth/services"
 	"github.com/google/uuid"
+	"github.com/sendgrid/rest"
+	"github.com/sendgrid/sendgrid-go/helpers/mail"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -28,6 +32,7 @@ func (s *AuthSuite) TearDownTest() {
 	database.DB.MustExec("truncate table users")
 	database.DB.MustExec("truncate table active_sessions")
 	database.RDB.FlushAll(context.Background())
+	services.ServiceMailClient = new(mockMailClient)
 }
 
 func (s *AuthSuite) TestRegister() {
@@ -75,6 +80,45 @@ func (s *AuthSuite) TestCannotLoginWithInvalidPassword() {
 	_ = makeUser(s.T())
 
 	testLogin(s.T(), http.StatusUnauthorized, "test", "password-wrong")
+}
+
+func (s *AuthSuite) TestLoginSendsEmailOnNewDeviceButNotKnownDevice() {
+	user := makeUser(s.T())
+	database.DB.MustExec("UPDATE users SET email = ? WHERE id = ?", "test@test.com", user.ID)
+
+	mockClient := new(mockMailClient)
+	mockClient.On("Send", mock.MatchedBy(func(message *mail.SGMailV3) bool {
+		return message.Personalizations[0].To[0].Address == "test@test.com"
+	})).Return(&rest.Response{StatusCode: 200, Body: ""}, nil)
+	services.ServiceMailClient = mockClient
+
+	w := httptest.NewRecorder()
+	reader := strings.NewReader(fmt.Sprintf("username=%s&password=%s", "test", "password"))
+	req, _ := http.NewRequest("POST", "/api/v1/auth/login", reader)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	r.ServeHTTP(w, req)
+
+	s.Require().Equal(http.StatusOK, w.Code)
+	var deviceCookie *http.Cookie
+	for _, c := range w.Result().Cookies() {
+		if c.Name == "device_id" {
+			deviceCookie = c
+		}
+	}
+	s.Require().NotNil(deviceCookie)
+	mockClient.AssertNumberOfCalls(s.T(), "Send", 1)
+
+	w = httptest.NewRecorder()
+	reader = strings.NewReader(fmt.Sprintf("username=%s&password=%s", "test", "password"))
+	req, _ = http.NewRequest("POST", "/api/v1/auth/login", reader)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Cookie", "device_id="+deviceCookie.Value)
+	r.ServeHTTP(w, req)
+
+	s.Require().Equal(http.StatusOK, w.Code)
+
+	mockClient.AssertNumberOfCalls(s.T(), "Send", 1)
+	mockClient.AssertExpectations(s.T())
 }
 
 func (s *AuthSuite) TestAuthRouteIsRateLimited() {
@@ -214,8 +258,13 @@ func getSessionID(s *suite.Suite, user db.User) string {
 	r.ServeHTTP(w, req)
 
 	s.Require().Equal(http.StatusOK, w.Code)
-	s.Require().Len(w.Result().Cookies(), 1)
-	s.Require().Equal("session_id", w.Result().Cookies()[0].Name)
+	var cookie *http.Cookie
+	for _, c := range w.Result().Cookies() {
+		if c.Name == "session_id" {
+			cookie = c
+		}
+	}
+	s.Require().NotNil(cookie)
 
-	return w.Result().Cookies()[0].Value
+	return cookie.Value
 }

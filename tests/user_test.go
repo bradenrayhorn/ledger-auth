@@ -25,6 +25,7 @@ func (s *UserTestSuite) TearDownTest() {
 	database.DB.MustExec("truncate table users")
 	database.DB.MustExec("truncate table active_sessions")
 	database.RDB.FlushAll(context.Background())
+	services.ServiceMailClient = new(mockMailClient)
 }
 
 func (s *UserTestSuite) TestCannotUpdateWithInvalidEmail() {
@@ -48,7 +49,7 @@ func (s *UserTestSuite) TestCanUpdateUserWithEmail() {
 	mockClient := new(mockMailClient)
 	mockClient.On("Send", mock.MatchedBy(func(message *mail.SGMailV3) bool {
 		return message.Personalizations[0].To[0].Address == "test@test.com"
-	})).Return(&rest.Response{StatusCode: 200, Body: ""}, nil).Once()
+	})).Return(&rest.Response{StatusCode: 200, Body: ""}, nil)
 
 	services.ServiceMailClient = mockClient
 
@@ -63,6 +64,9 @@ func (s *UserTestSuite) TestCanUpdateUserWithEmail() {
 	user, err := repositories.GetUserByID(context.Background(), user.ID)
 	s.Require().Nil(err)
 	s.Assert().Equal("test@test.com", user.Email.String)
+
+	mockClient.AssertNumberOfCalls(s.T(), "Send", 1)
+	mockClient.AssertExpectations(s.T())
 }
 
 func TestUserSuite(t *testing.T) {

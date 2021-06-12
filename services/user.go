@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/bradenrayhorn/ledger-auth/internal"
+	"github.com/bradenrayhorn/ledger-auth/internal/db"
 	"github.com/bradenrayhorn/ledger-auth/repositories"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -35,18 +36,18 @@ func RegisterUser(username string, password string) error {
 	return nil
 }
 
-func Login(username string, password string) (string, error) {
+func Login(username string, password string) (*db.User, error) {
 	user, err := repositories.GetUserByUsername(context.Background(), username)
 	if err != nil {
-		return "", internal.MakeAuthenticationError(errors.New("invalid username/password"))
+		return nil, internal.MakeAuthenticationError(errors.New("invalid username/password"))
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		return "", internal.MakeAuthenticationError(errors.New("invalid username/password"))
+		return nil, internal.MakeAuthenticationError(errors.New("invalid username/password"))
 	}
 
-	return user.ID, nil
+	return &user, nil
 }
 
 func UpdateEmail(userID string, email string) error {
