@@ -10,7 +10,7 @@ import (
 )
 
 type UpdateEmailRequest struct {
-	Email string `form:"email" binding:"required"`
+	Email string `form:"email"`
 }
 
 func UpdateEmail(c *gin.Context) {
@@ -20,13 +20,15 @@ func UpdateEmail(c *gin.Context) {
 		return
 	}
 
-	_, err := mail.ParseAddress(request.Email)
-	if err != nil {
-		_ = c.Error(internal.MakeValidationError(errors.New("invalid email")))
-		return
+	if len(request.Email) > 0 {
+		_, err := mail.ParseAddress(request.Email)
+		if err != nil {
+			_ = c.Error(internal.MakeValidationError(errors.New("invalid email")))
+			return
+		}
 	}
 
-	err = services.UpdateEmail(c.GetString("user_id"), request.Email)
+	err := services.UpdateEmail(c.GetString("user_id"), request.Email)
 	if err != nil {
 		_ = c.Error(err)
 		return

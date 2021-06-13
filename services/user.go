@@ -56,5 +56,8 @@ func UpdateEmail(userID string, email string) error {
 		return err
 	}
 
-	return NewEmailService(ServiceMailClient).SendEmail("Ledger Security Notice", "This email was added to your Ledger account to receive security notices.", email)
+	if len(email) > 0 {
+		return NewEmailService(ServiceMailClient).SendEmail("Ledger Security Notice", "This email was added to your Ledger account to receive security notices.", email)
+	}
+	return nil
 }

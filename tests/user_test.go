@@ -69,6 +69,30 @@ func (s *UserTestSuite) TestCanUpdateUserWithEmail() {
 	mockClient.AssertExpectations(s.T())
 }
 
+func (s *UserTestSuite) TestCanRemoveUserEmail() {
+	user := makeUser(s.T())
+	sessionID := getSessionID(&s.Suite, user)
+	database.DB.MustExec("UPDATE users SET email = ? WHERE id = ?", "test@test.com", user.ID)
+
+	mockClient := new(mockMailClient)
+	services.ServiceMailClient = mockClient
+
+	w := httptest.NewRecorder()
+	reader := strings.NewReader("email=")
+	req, _ := http.NewRequest("POST", "/api/v1/me/email", reader)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Cookie", "session_id="+sessionID)
+	r.ServeHTTP(w, req)
+
+	s.Assert().Equal(http.StatusOK, w.Code)
+	user, err := repositories.GetUserByID(context.Background(), user.ID)
+	s.Require().Nil(err)
+	s.Assert().Equal(false, user.Email.Valid)
+
+	mockClient.AssertNumberOfCalls(s.T(), "Send", 0)
+	mockClient.AssertExpectations(s.T())
+}
+
 func TestUserSuite(t *testing.T) {
 	suite.Run(t, new(UserTestSuite))
 }

@@ -29,8 +29,13 @@ func GetUserByID(ctx context.Context, userID string) (db.User, error) {
 }
 
 func UpdateUserEmail(ctx context.Context, userID string, email string) error {
+	sqlEmail := sql.NullString{Valid: false}
+	if len(email) > 0 {
+		sqlEmail.Valid = true
+		sqlEmail.String = email
+	}
 	return db.New(database.DB).UpdateUserEmail(ctx, db.UpdateUserEmailParams{
-		Email: sql.NullString{String: email, Valid: true},
+		Email: sqlEmail,
 		ID:    userID,
 	})
 }
