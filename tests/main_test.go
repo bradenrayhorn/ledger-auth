@@ -38,6 +38,7 @@ func testMain(m *testing.M) int {
 	database.Setup()
 	database.SetupRedis()
 
+	gin.SetMode(gin.TestMode)
 	r = routing.MakeRouter()
 	services.ServiceMailClient = new(mockMailClient)
 

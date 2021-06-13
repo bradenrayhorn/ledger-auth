@@ -13,6 +13,7 @@ import (
 
 	"github.com/bradenrayhorn/ledger-auth/database"
 	"github.com/bradenrayhorn/ledger-auth/internal/db"
+	"github.com/bradenrayhorn/ledger-auth/repositories"
 	"github.com/bradenrayhorn/ledger-auth/routing"
 	"github.com/bradenrayhorn/ledger-auth/services"
 	"github.com/google/uuid"
@@ -203,6 +204,13 @@ func (s *AuthSuite) TestCannotShowMeUnauthenticated() {
 func (s *AuthSuite) TestLogout() {
 	user := makeUser(s.T())
 	sessionID := getSessionID(&s.Suite, user)
+	activeSessions, err := repositories.GetActiveSessions(context.Background(), user.ID)
+	s.Require().Nil(err)
+	s.Require().Len(activeSessions, 1)
+	activeSessionIDs := make([]string, 0)
+	for _, s := range activeSessions {
+		activeSessionIDs = append(activeSessionIDs, s.SessionID)
+	}
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/api/v1/auth/logout", nil)
@@ -214,9 +222,44 @@ func (s *AuthSuite) TestLogout() {
 	s.Require().Equal("session_id", w.Result().Cookies()[0].Name)
 	s.Require().True(w.Result().Cookies()[0].Expires.Before(time.Now()))
 
-	exists, err := database.RDB.Exists(context.Background(), sessionID).Result()
+	exists, err := database.RDB.Exists(context.Background(), activeSessionIDs...).Result()
 	s.Require().Nil(err)
 	s.Require().Equal(int64(0), exists)
+}
+
+func (s *AuthSuite) TestRevokeSessions() {
+	user := makeUser(s.T())
+	sessionID := getSessionID(&s.Suite, user)
+	_ = getSessionID(&s.Suite, user)
+	activeSessions, err := repositories.GetActiveSessions(context.Background(), user.ID)
+	s.Require().Nil(err)
+	s.Require().Len(activeSessions, 2)
+	activeSessionIDs := make([]string, 0)
+	for _, s := range activeSessions {
+		activeSessionIDs = append(activeSessionIDs, s.SessionID)
+	}
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/api/v1/auth/revoke", nil)
+	req.Header.Add("Cookie", "session_id="+sessionID)
+	r.ServeHTTP(w, req)
+
+	s.Require().Equal(http.StatusOK, w.Code)
+
+	exists, err := database.RDB.Exists(context.Background(), activeSessionIDs...).Result()
+	s.Require().Nil(err)
+	s.Require().Equal(int64(0), exists)
+
+	activeSessions, err = repositories.GetActiveSessions(context.Background(), user.ID)
+	s.Require().Nil(err)
+	s.Require().Len(activeSessions, 0)
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest("GET", "/api/v1/me", nil)
+	req.Header.Add("Cookie", "session_id="+sessionID)
+	r.ServeHTTP(w, req)
+
+	s.Require().Equal(http.StatusUnauthorized, w.Code)
 }
 
 func TestAuthSuite(t *testing.T) {

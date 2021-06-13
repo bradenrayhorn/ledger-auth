@@ -130,6 +130,25 @@ func (s SessionService) GetActiveSessions(ctx context.Context, userID string) ([
 	return formattedSessions, nil
 }
 
+func (s SessionService) DeleteActiveSessionsForUser(ctx context.Context, userID string) error {
+	sessions, err := repositories.GetActiveSessions(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	sessionIDs := make([]string, 0)
+	for _, s := range sessions {
+		sessionIDs = append(sessionIDs, s.SessionID)
+	}
+
+	err = s.rdb.Del(ctx, sessionIDs...).Err()
+	if err != nil {
+		return err
+	}
+
+	return repositories.DeleteActiveSessionsForUser(ctx, userID)
+}
+
 func makeSessionHash(userID string, data SessionData) map[string]interface{} {
 	return map[string]interface{}{
 		"user_id":       userID,

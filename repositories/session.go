@@ -29,3 +29,7 @@ func DeleteActiveSessions(ctx context.Context, sessionIDs []string) error {
 	_, err = database.DB.ExecContext(ctx, query, args...)
 	return err
 }
+
+func DeleteActiveSessionsForUser(ctx context.Context, userID string) error {
+	return db.New(database.DB).DeleteActiveSessionsForUser(ctx, userID)
+}

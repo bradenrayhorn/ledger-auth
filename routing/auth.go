@@ -113,3 +113,11 @@ func Me(c *gin.Context) {
 		"email": email,
 	})
 }
+
+func RevokeSessions(c *gin.Context) {
+	err := services.NewSessionService(database.RDB).DeleteActiveSessionsForUser(context.Background(), c.GetString("user_id"))
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+}

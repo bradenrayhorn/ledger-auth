@@ -5,3 +5,6 @@ INSERT INTO active_sessions (
 
 -- name: GetActiveSessions :many
 SELECT * FROM active_sessions WHERE user_id = ?;
+
+-- name: DeleteActiveSessionsForUser :exec
+DELETE FROM active_sessions WHERE user_id = ?;

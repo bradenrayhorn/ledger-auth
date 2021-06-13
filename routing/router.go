@@ -70,6 +70,7 @@ func applyRoutes(router *gin.Engine) {
 	api.GET("/me", Me)
 	api.GET("/sessions", GetSessions)
 	api.POST("/auth/logout", Logout)
+	api.POST("/auth/revoke", RevokeSessions)
 	api.POST("/me/email", UpdateEmail)
 }
 

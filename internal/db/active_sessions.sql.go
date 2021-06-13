@@ -23,6 +23,15 @@ func (q *Queries) CreateActiveSession(ctx context.Context, arg CreateActiveSessi
 	return err
 }
 
+const deleteActiveSessionsForUser = `-- name: DeleteActiveSessionsForUser :exec
+DELETE FROM active_sessions WHERE user_id = ?
+`
+
+func (q *Queries) DeleteActiveSessionsForUser(ctx context.Context, userID string) error {
+	_, err := q.db.ExecContext(ctx, deleteActiveSessionsForUser, userID)
+	return err
+}
+
 const getActiveSessions = `-- name: GetActiveSessions :many
 SELECT session_id, user_id, created_at FROM active_sessions WHERE user_id = ?
 `
