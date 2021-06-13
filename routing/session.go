@@ -66,7 +66,7 @@ func createSession(w http.ResponseWriter, userID string, ip string, userAgent st
 	return nil
 }
 
-func getSession(cookieValueString string, ip string, userAgent string) (string, string, error) {
+func GetSessionFromCookie(cookieValueString string, ip string, userAgent string) (string, string, error) {
 	decodedCookie, err := base64.RawURLEncoding.DecodeString(cookieValueString)
 	if err != nil {
 		return "", "", err

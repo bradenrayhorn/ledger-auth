@@ -2,14 +2,19 @@ package tests
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"log"
 	"net"
 	"testing"
 	"time"
 
 	"github.com/bradenrayhorn/ledger-auth/database"
+	"github.com/bradenrayhorn/ledger-auth/routing"
 	"github.com/bradenrayhorn/ledger-auth/server"
+	"github.com/bradenrayhorn/ledger-auth/services"
 	"github.com/bradenrayhorn/ledger-protos/session"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/test/bufconn"
@@ -51,13 +56,19 @@ func (s *SessionSuite) TestCanGetActiveSession() {
 		"user_agent":    "TestAgent",
 		"last_accessed": time.Now().Add(time.Minute * -10),
 	})
+	hmacService := services.NewHMACService([]byte(viper.GetString("session_hash_key")))
+	sig, err := hmacService.SignData([]byte("1234"))
+	s.Require().Nil(err)
+
+	sessionValue, err := json.Marshal(routing.CookieValue{SessionID: "1234", Signature: sig})
+	s.Require().Nil(err)
 
 	conn, err := grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(s.bufDialer), grpc.WithInsecure())
 	s.Require().Nil(err)
 	defer conn.Close()
 
 	client := session.NewSessionAuthenticatorClient(conn)
-	resp, err := client.Authenticate(ctx, &session.SessionAuthenticateRequest{SessionID: "1234", UserAgent: "NewAgent", IP: "1.1.1.1"})
+	resp, err := client.Authenticate(ctx, &session.SessionAuthenticateRequest{SessionID: base64.RawURLEncoding.EncodeToString(sessionValue), UserAgent: "NewAgent", IP: "1.1.1.1"})
 
 	s.Require().Nil(err)
 	s.Require().NotNil(resp)
