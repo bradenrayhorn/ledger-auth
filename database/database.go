@@ -70,6 +70,9 @@ func loadCACert() *tls.Config {
 	if tlsConfig != nil {
 		return tlsConfig
 	}
+	if !viper.GetBool("use_database_tls") {
+		return nil
+	}
 	rootCertPool := x509.NewCertPool()
 	pem, err := ioutil.ReadFile(viper.GetString("ca_cert_path"))
 	if err != nil {

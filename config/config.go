@@ -1,9 +1,18 @@
 package config
 
 import (
+	"crypto/x509"
+	"io/ioutil"
 	"log"
+	"net/url"
+	"strings"
+	"time"
 
+	"github.com/johanbrandhorst/certify"
+	"github.com/johanbrandhorst/certify/issuers/vault"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
+	zapadapter "logur.dev/adapter/zap"
 )
 
 func LoadConfig() {
@@ -44,4 +53,57 @@ func LoadConfig() {
 	_ = viper.BindEnv("grpc_port", "GRPC_PORT")
 	_ = viper.BindEnv("session_hash_key", "SESION_HASH_KEY")
 	_ = viper.BindEnv("ca_cert_path", "CA_CERT_PATH")
+}
+
+func LoadVaultToken() string {
+	tokenBytes, err := ioutil.ReadFile(viper.GetString("vault_token_path"))
+	if err != nil {
+		log.Println(err)
+		return ""
+	}
+
+	return strings.TrimSpace(string(tokenBytes))
+}
+
+func CreateCertify() (*certify.Certify, error) {
+	url, err := url.Parse(viper.GetString("vault_url"))
+	if err != nil {
+		return nil, err
+	}
+	issuer := &vault.Issuer{
+		URL:        url,
+		Mount:      viper.GetString("vault_pki_mount"),
+		AuthMethod: &vault.RenewingToken{Initial: LoadVaultToken()},
+		Role:       viper.GetString("vault_pki_role"),
+		TimeToLive: time.Hour * 24,
+	}
+	certify := &certify.Certify{
+		Issuer:      issuer,
+		CommonName:  viper.GetString("vault_pki_cn"),
+		Cache:       certify.NewMemCache(),
+		RenewBefore: time.Minute * 10,
+		Logger:      zapadapter.New(zap.L()),
+	}
+	return certify, nil
+}
+
+var certPool *x509.CertPool
+
+func GetCACertPool() *x509.CertPool {
+	if certPool != nil {
+		return certPool
+	}
+	rootCertPool := x509.NewCertPool()
+	pem, err := ioutil.ReadFile(viper.GetString("ca_cert_path"))
+	if err != nil {
+		zap.S().Warn(err.Error())
+		return nil
+	}
+
+	if ok := rootCertPool.AppendCertsFromPEM([]byte(strings.TrimSpace(string(pem)))); !ok {
+		zap.S().Warn("failed to append pem")
+		return nil
+	}
+	certPool = rootCertPool
+	return certPool
 }

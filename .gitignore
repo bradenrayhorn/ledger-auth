@@ -8,4 +8,6 @@ config.yml
 coverage.txt
 jwt_rsa
 jwt_rsa.pub
+token
+ca.pem
 ledger-auth

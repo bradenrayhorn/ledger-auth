@@ -12,6 +12,7 @@ require (
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/google/uuid v1.2.0
 	github.com/jmoiron/sqlx v1.3.1
+	github.com/johanbrandhorst/certify v1.8.1
 	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/mattn/go-isatty v0.0.13 // indirect
@@ -21,11 +22,12 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/ugorji/go v1.2.6 // indirect
 	github.com/ulule/limiter/v3 v3.8.0
-	go.uber.org/zap v1.10.0
+	go.uber.org/zap v1.14.1
 	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a
 	golang.org/x/net v0.0.0-20210510120150-4163338589ed // indirect
 	golang.org/x/sys v0.0.0-20210603125802-9665404d3644 // indirect
 	google.golang.org/genproto v0.0.0-20210513213006-bf773b8c8384 // indirect
 	google.golang.org/grpc v1.37.1
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	logur.dev/adapter/zap v0.5.0 // indirect
 )

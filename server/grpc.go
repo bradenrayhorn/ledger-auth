@@ -1,14 +1,17 @@
 package server
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net"
 
+	"github.com/bradenrayhorn/ledger-auth/config"
 	"github.com/bradenrayhorn/ledger-protos/session"
 	"github.com/go-redis/redis/v8"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 type GRPCServer struct {
@@ -30,7 +33,14 @@ func (s GRPCServer) Start() {
 		zap.S().Fatalf("failed to bind grpc port %s: %v", requestedPort, err)
 	}
 
-	grpcServer := grpc.NewServer()
+	certify, _ := config.CreateCertify()
+	tlsConfig := &tls.Config{
+		GetCertificate: certify.GetCertificate,
+		ClientCAs:      config.GetCACertPool(),
+		ClientAuth:     tls.RequireAndVerifyClientCert,
+	}
+
+	grpcServer := grpc.NewServer(grpc.Creds(credentials.NewTLS(tlsConfig)))
 
 	session.RegisterSessionAuthenticatorServer(grpcServer, NewSessionAuthenticatorServer(s.rdb))
 
