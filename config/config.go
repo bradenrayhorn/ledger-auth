@@ -58,7 +58,7 @@ func LoadConfig() {
 func LoadVaultToken() string {
 	tokenBytes, err := ioutil.ReadFile(viper.GetString("vault_token_path"))
 	if err != nil {
-		log.Println(err)
+		zap.S().Warn(err.Error())
 		return ""
 	}
 

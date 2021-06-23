@@ -12,6 +12,7 @@ container:
   annotations:
     vault.hashicorp.com/agent-inject: "true"
     vault.hashicorp.com/role: "ledger-auth"
+    vault.hashocorp.com/agent-pre-populate-only: "true"
     vault.hashicorp.com/agent-inject-token: "true"
     vault.hashicorp.com/agent-inject-secret-ca: "rootca/cert/ca"
     vault.hashicorp.com/agent-inject-template-ca: |
@@ -52,6 +53,9 @@ service:
   - port: 80
     targetPort: 8080
     name: http
+  - port: 9000
+    targetPort: 9000
+    name: grpc
 
 ingress:
   enabled: true
