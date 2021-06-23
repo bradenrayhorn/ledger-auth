@@ -58,3 +58,11 @@ make migrate-down
 ```shell
 migrate create -ext sql -dir sql/migrations -seq <migration name>
 ```
+
+### Vault PKI
+
+The following command is an example of how to create a Vault PKI role with proper restrictions:
+
+```bash
+write intermediateca/roles/ledger-auth allow_localhost=false allowed_domains=ledger-auth,ledger-auth.ledger-auth allow_bare_domains=true enforce_hostnames=false key_type=ec key_bits=256
+```
