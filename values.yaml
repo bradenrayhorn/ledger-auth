@@ -30,6 +30,7 @@ container:
     vault.hashicorp.com/agent-inject-file-env: "config.yml"
   ports:
   - 8080
+  - 9000
   livenessProbe:
     httpGet:
       path: /health-check
