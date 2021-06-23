@@ -74,9 +74,7 @@ ingress:
     - ${{ secrets.HOST }}
     secretName: ledger-auth-cert
 
-resources:
-  requests:
-    cpu: 50m
+resources: {}
 
 nodeSelector: {}
 
