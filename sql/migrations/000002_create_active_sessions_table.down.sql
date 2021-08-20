@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS active_sessions;
+DROP TABLE active_sessions;

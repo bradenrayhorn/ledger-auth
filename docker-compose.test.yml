@@ -21,7 +21,8 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./sql/migrations/:/docker-entrypoint-initdb.d/
+      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d/
+      - ./sql/migrations:/migrations
     environment:
       - "POSTGRES_PASSWORD=password"
       - "POSTGRES_DB=ledger_auth"
