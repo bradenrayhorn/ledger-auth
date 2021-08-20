@@ -36,7 +36,7 @@ func (s *SessionHTTPSuite) TestGetSessions() {
 	user := makeUser(s.T())
 	sessionID1 := getSessionID(&s.Suite, user)
 
-	database.DB.MustExec("INSERT INTO active_sessions (user_id, session_id) VALUES(?,?);", user.ID, "x")
+	database.DB.MustExec("INSERT INTO active_sessions (user_id, session_id) VALUES($1, $2);", user.ID.String(), "x")
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/api/v1/sessions", nil)

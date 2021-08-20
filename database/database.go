@@ -8,12 +8,11 @@ import (
 	"io/ioutil"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/stdlib"
 	"github.com/jmoiron/sqlx"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
-
-	"github.com/go-sql-driver/mysql"
-	_ "github.com/go-sql-driver/mysql"
 )
 
 var DB *sqlx.DB
@@ -22,23 +21,23 @@ var RDB *redis.Client
 var tlsConfig *tls.Config
 
 func Setup() {
-	tlsString := ""
-	if tls := loadCACert(); tls != nil {
-		mysql.RegisterTLSConfig("vault", tls)
-		tlsString = "&tls=vault"
-	}
-
-	db, err := sqlx.Connect("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true%s",
-		viper.GetString("mysql_username"),
-		viper.GetString("mysql_password"),
-		viper.GetString("mysql_host"),
-		viper.GetString("mysql_port"),
-		viper.GetString("mysql_database"),
-		tlsString,
+	connConfig, err := pgx.ParseConfig(fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
+		viper.GetString("pg_username"),
+		viper.GetString("pg_password"),
+		viper.GetString("pg_host"),
+		viper.GetString("pg_port"),
+		viper.GetString("pg_database"),
 	))
-
 	if err != nil {
 		zap.S().Error(err.Error())
+		return
+	}
+	connConfig.TLSConfig = loadCACert()
+	connString := stdlib.RegisterConnConfig(connConfig)
+	db, err := sqlx.Open("pgx", connString)
+	if err != nil {
+		zap.S().Error(err.Error())
+		return
 	}
 
 	DB = db

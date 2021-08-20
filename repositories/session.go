@@ -5,31 +5,24 @@ import (
 
 	"github.com/bradenrayhorn/ledger-auth/database"
 	"github.com/bradenrayhorn/ledger-auth/internal/db"
-	"github.com/jmoiron/sqlx"
+	"github.com/google/uuid"
 )
 
-func CreateActiveSession(ctx context.Context, userID string, sessionID string) error {
+func CreateActiveSession(ctx context.Context, userID uuid.UUID, sessionID string) error {
 	return db.New(database.DB).CreateActiveSession(ctx, db.CreateActiveSessionParams{
 		UserID:    userID,
 		SessionID: sessionID,
 	})
 }
 
-func GetActiveSessions(ctx context.Context, userID string) ([]db.ActiveSession, error) {
+func GetActiveSessions(ctx context.Context, userID uuid.UUID) ([]db.ActiveSession, error) {
 	return db.New(database.DB).GetActiveSessions(ctx, userID)
 }
 
 func DeleteActiveSessions(ctx context.Context, sessionIDs []string) error {
-	query, args, err := sqlx.In("DELETE FROM active_sessions WHERE session_id IN (?);", sessionIDs)
-	if err != nil {
-		return err
-	}
-
-	query = database.DB.Rebind(query)
-	_, err = database.DB.ExecContext(ctx, query, args...)
-	return err
+	return db.New(database.DB).DeleteActiveSessionsByID(ctx, sessionIDs)
 }
 
-func DeleteActiveSessionsForUser(ctx context.Context, userID string) error {
+func DeleteActiveSessionsForUser(ctx context.Context, userID uuid.UUID) error {
 	return db.New(database.DB).DeleteActiveSessionsForUser(ctx, userID)
 }

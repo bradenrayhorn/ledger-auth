@@ -5,17 +5,20 @@ package db
 
 import (
 	"context"
+
+	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 const createActiveSession = `-- name: CreateActiveSession :exec
 INSERT INTO active_sessions (
   session_id, user_id
-) VALUES (?, ?)
+) VALUES ($1, $2)
 `
 
 type CreateActiveSessionParams struct {
 	SessionID string
-	UserID    string
+	UserID    uuid.UUID
 }
 
 func (q *Queries) CreateActiveSession(ctx context.Context, arg CreateActiveSessionParams) error {
@@ -23,20 +26,29 @@ func (q *Queries) CreateActiveSession(ctx context.Context, arg CreateActiveSessi
 	return err
 }
 
-const deleteActiveSessionsForUser = `-- name: DeleteActiveSessionsForUser :exec
-DELETE FROM active_sessions WHERE user_id = ?
+const deleteActiveSessionsByID = `-- name: DeleteActiveSessionsByID :exec
+DELETE FROM active_sessions WHERE session_id = ANY($1::char(86)[])
 `
 
-func (q *Queries) DeleteActiveSessionsForUser(ctx context.Context, userID string) error {
+func (q *Queries) DeleteActiveSessionsByID(ctx context.Context, dollar_1 []string) error {
+	_, err := q.db.ExecContext(ctx, deleteActiveSessionsByID, pq.Array(dollar_1))
+	return err
+}
+
+const deleteActiveSessionsForUser = `-- name: DeleteActiveSessionsForUser :exec
+DELETE FROM active_sessions WHERE user_id = $1
+`
+
+func (q *Queries) DeleteActiveSessionsForUser(ctx context.Context, userID uuid.UUID) error {
 	_, err := q.db.ExecContext(ctx, deleteActiveSessionsForUser, userID)
 	return err
 }
 
 const getActiveSessions = `-- name: GetActiveSessions :many
-SELECT session_id, user_id, created_at FROM active_sessions WHERE user_id = ?
+SELECT session_id, user_id, created_at FROM active_sessions WHERE user_id = $1
 `
 
-func (q *Queries) GetActiveSessions(ctx context.Context, userID string) ([]ActiveSession, error) {
+func (q *Queries) GetActiveSessions(ctx context.Context, userID uuid.UUID) ([]ActiveSession, error) {
 	rows, err := q.db.QueryContext(ctx, getActiveSessions, userID)
 	if err != nil {
 		return nil, err

@@ -1,8 +1,8 @@
-mysql_host: db
-mysql_port: 3306
-mysql_username: root
-mysql_password: password
-mysql_database: ledger_auth
+pg_host: db
+pg_port: 5432
+pg_username: postgres
+pg_password: password
+pg_database: ledger_auth
 redis_addr: keydb:6379
 redis_db: 0
 session_hash_key: "x"

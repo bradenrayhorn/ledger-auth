@@ -85,7 +85,7 @@ func (s *AuthSuite) TestCannotLoginWithInvalidPassword() {
 
 func (s *AuthSuite) TestLoginSendsEmailOnNewDeviceButNotKnownDevice() {
 	user := makeUser(s.T())
-	database.DB.MustExec("UPDATE users SET email = ? WHERE id = ?", "test@test.com", user.ID)
+	database.DB.MustExec("UPDATE users SET email = $1 WHERE id = $2", "test@test.com", user.ID.String())
 
 	mockClient := new(mockMailClient)
 	mockClient.On("Send", mock.MatchedBy(func(message *mail.SGMailV3) bool {
@@ -174,7 +174,7 @@ func (s *AuthSuite) TestShowMe() {
 
 	var body GetMeResponse
 	_ = json.Unmarshal(w.Body.Bytes(), &body)
-	s.Require().Equal(user.ID, body.Id)
+	s.Require().Equal(user.ID.String(), body.Id)
 }
 
 func (s *AuthSuite) TestCannotShowMeWithExpiredSession() {
@@ -278,7 +278,7 @@ func testLogin(t *testing.T, expectedStatus int, username string, password strin
 
 func makeUser(t *testing.T) db.User {
 	user := db.User{
-		ID:        uuid.NewString(),
+		ID:        uuid.Must(uuid.NewRandom()),
 		Username:  "test",
 		Password:  "$2a$10$naqzJWUaOFm1/512Od.wPO4H8Vh8K38IGAb7rtgFizSflLVhpgMRG",
 		CreatedAt: time.Time{},

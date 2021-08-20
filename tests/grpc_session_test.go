@@ -14,6 +14,7 @@ import (
 	"github.com/bradenrayhorn/ledger-auth/server"
 	"github.com/bradenrayhorn/ledger-auth/services"
 	"github.com/bradenrayhorn/ledger-protos/session"
+	"github.com/google/uuid"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
@@ -50,8 +51,9 @@ func (s *SessionSuite) bufDialer(context.Context, string) (net.Conn, error) {
 
 func (s *SessionSuite) TestCanGetActiveSession() {
 	ctx := context.Background()
+	userID := uuid.Must(uuid.NewRandom()).String()
 	database.RDB.HSet(ctx, "1234", map[string]interface{}{
-		"user_id":       "my user id",
+		"user_id":       userID,
 		"ip":            "18.8.9.1",
 		"user_agent":    "TestAgent",
 		"last_accessed": time.Now().Add(time.Minute * -10),
@@ -73,7 +75,7 @@ func (s *SessionSuite) TestCanGetActiveSession() {
 	s.Require().Nil(err)
 	s.Require().NotNil(resp)
 	s.Require().NotNil(resp.Session)
-	s.Require().Equal("my user id", resp.Session.UserID)
+	s.Require().Equal(userID, resp.Session.UserID)
 	s.Require().Equal("1234", resp.Session.SessionID)
 
 	res, err := database.RDB.HGetAll(ctx, "1234").Result()

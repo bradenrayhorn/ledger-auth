@@ -11,6 +11,7 @@ import (
 
 	"github.com/bradenrayhorn/ledger-auth/repositories"
 	"github.com/go-redis/redis/v8"
+	"github.com/google/uuid"
 	"github.com/spf13/viper"
 )
 
@@ -29,7 +30,7 @@ type SessionData struct {
 	UserAgent string
 }
 
-func (s SessionService) CreateSession(userID string, data SessionData) (string, error) {
+func (s SessionService) CreateSession(userID uuid.UUID, data SessionData) (string, error) {
 	bytes := make([]byte, 64)
 	_, err := rand.Read(bytes)
 	if err != nil {
@@ -71,8 +72,12 @@ func (s SessionService) GetSession(ctx context.Context, sessionID string, data S
 	if len(sessionData) == 0 || len(sessionData["user_id"]) == 0 {
 		return "", errors.New("invalid session")
 	}
+	userID, err := uuid.Parse(sessionData["user_id"])
+	if err != nil {
+		return "", err
+	}
 
-	err = s.rdb.HSet(context.Background(), sessionID, makeSessionHash(sessionData["user_id"], data)).Err()
+	err = s.rdb.HSet(context.Background(), sessionID, makeSessionHash(userID, data)).Err()
 	if err != nil {
 		return "", err
 	}
@@ -84,7 +89,7 @@ func (s SessionService) DeleteSession(ctx context.Context, sessionID string) err
 	return s.rdb.Del(ctx, sessionID).Err()
 }
 
-func (s SessionService) GetActiveSessions(ctx context.Context, userID string) ([]map[string]interface{}, error) {
+func (s SessionService) GetActiveSessions(ctx context.Context, userID uuid.UUID) ([]map[string]interface{}, error) {
 	formattedSessions := []map[string]interface{}{}
 	sessions, err := repositories.GetActiveSessions(ctx, userID)
 	if err != nil {
@@ -130,7 +135,7 @@ func (s SessionService) GetActiveSessions(ctx context.Context, userID string) ([
 	return formattedSessions, nil
 }
 
-func (s SessionService) DeleteActiveSessionsForUser(ctx context.Context, userID string) error {
+func (s SessionService) DeleteActiveSessionsForUser(ctx context.Context, userID uuid.UUID) error {
 	sessions, err := repositories.GetActiveSessions(ctx, userID)
 	if err != nil {
 		return err
@@ -149,9 +154,9 @@ func (s SessionService) DeleteActiveSessionsForUser(ctx context.Context, userID 
 	return repositories.DeleteActiveSessionsForUser(ctx, userID)
 }
 
-func makeSessionHash(userID string, data SessionData) map[string]interface{} {
+func makeSessionHash(userID uuid.UUID, data SessionData) map[string]interface{} {
 	return map[string]interface{}{
-		"user_id":       userID,
+		"user_id":       userID.String(),
 		"ip":            data.IP,
 		"user_agent":    data.UserAgent,
 		"last_accessed": time.Now().Format(time.RFC3339),

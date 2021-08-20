@@ -28,7 +28,7 @@ func RegisterUser(username string, password string) error {
 		return internal.MakeBadRequestError(err)
 	}
 
-	err = repositories.CreateUser(context.Background(), uuid.NewString(), username, string(hashedPassword))
+	err = repositories.CreateUser(context.Background(), uuid.New(), username, string(hashedPassword))
 	if err != nil {
 		return internal.MakeBadRequestError(err)
 	}
@@ -50,7 +50,7 @@ func Login(username string, password string) (*db.User, error) {
 	return &user, nil
 }
 
-func UpdateEmail(userID string, email string) error {
+func UpdateEmail(userID uuid.UUID, email string) error {
 	err := repositories.UpdateUserEmail(context.Background(), userID, email)
 	if err != nil {
 		return err
