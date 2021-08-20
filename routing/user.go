@@ -7,6 +7,7 @@ import (
 	"github.com/bradenrayhorn/ledger-auth/internal"
 	"github.com/bradenrayhorn/ledger-auth/services"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type UpdateEmailRequest struct {
@@ -28,7 +29,13 @@ func UpdateEmail(c *gin.Context) {
 		}
 	}
 
-	err := services.UpdateEmail(c.GetString("user_id"), request.Email)
+	userID, err := uuid.Parse(c.GetString("user_id"))
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	err = services.UpdateEmail(userID, request.Email)
 	if err != nil {
 		_ = c.Error(err)
 		return

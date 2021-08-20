@@ -1,8 +1,8 @@
 migrate:
-	 migrate -database 'mysql://root:password@tcp(127.0.0.1:${MYSQL_PORT})/ledger_auth' -path sql/migrations up
+	 migrate -database 'postgres://postgres:password@127.0.0.1:${POSTGRES_PORT}/ledger_auth?sslmode=disable' -path sql/migrations up
 
 migrate-down:
-	 migrate -database 'mysql://root:password@tcp(127.0.0.1:${MYSQL_PORT})/ledger_auth' -path sql/migrations down
+	 migrate -database 'postgres://postgres:password@127.0.0.1:${POSTGRES_PORT}/ledger_auth?sslmode=disable' -path sql/migrations down
 
 test:
 	docker-compose -f docker-compose.test.yml up --abort-on-container-exit --build

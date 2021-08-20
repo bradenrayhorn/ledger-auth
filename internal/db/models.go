@@ -5,16 +5,18 @@ package db
 import (
 	"database/sql"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type ActiveSession struct {
 	SessionID string
-	UserID    string
+	UserID    uuid.UUID
 	CreatedAt time.Time
 }
 
 type User struct {
-	ID        string
+	ID        uuid.UUID
 	Username  string
 	Password  string
 	Email     sql.NullString

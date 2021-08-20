@@ -9,6 +9,7 @@ import (
 	"github.com/bradenrayhorn/ledger-auth/repositories"
 	"github.com/bradenrayhorn/ledger-auth/services"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type RegisterRequest struct {
@@ -97,7 +98,12 @@ func Logout(c *gin.Context) {
 }
 
 func Me(c *gin.Context) {
-	user, err := repositories.GetUserByID(context.Background(), c.GetString("user_id"))
+	userID, err := uuid.Parse(c.GetString("user_id"))
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	user, err := repositories.GetUserByID(context.Background(), userID)
 	if err != nil {
 		_ = c.Error(err)
 		return
@@ -115,7 +121,12 @@ func Me(c *gin.Context) {
 }
 
 func RevokeSessions(c *gin.Context) {
-	err := services.NewSessionService(database.RDB).DeleteActiveSessionsForUser(context.Background(), c.GetString("user_id"))
+	userID, err := uuid.Parse(c.GetString("user_id"))
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	err = services.NewSessionService(database.RDB).DeleteActiveSessionsForUser(context.Background(), userID)
 	if err != nil {
 		_ = c.Error(err)
 		return

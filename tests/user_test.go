@@ -72,7 +72,7 @@ func (s *UserTestSuite) TestCanUpdateUserWithEmail() {
 func (s *UserTestSuite) TestCanRemoveUserEmail() {
 	user := makeUser(s.T())
 	sessionID := getSessionID(&s.Suite, user)
-	database.DB.MustExec("UPDATE users SET email = ? WHERE id = ?", "test@test.com", user.ID)
+	database.DB.MustExec("UPDATE users SET email = $1 WHERE id = $2", "test@test.com", user.ID.String())
 
 	mockClient := new(mockMailClient)
 	services.ServiceMailClient = mockClient

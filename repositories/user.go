@@ -6,13 +6,14 @@ import (
 
 	"github.com/bradenrayhorn/ledger-auth/database"
 	"github.com/bradenrayhorn/ledger-auth/internal/db"
+	"github.com/google/uuid"
 )
 
 func UserExists(ctx context.Context, username string) (bool, error) {
 	return db.New(database.DB).UserExists(ctx, username)
 }
 
-func CreateUser(ctx context.Context, id string, username string, hashedPassword string) error {
+func CreateUser(ctx context.Context, id uuid.UUID, username string, hashedPassword string) error {
 	return db.New(database.DB).CreateUser(ctx, db.CreateUserParams{
 		ID:       id,
 		Username: username,
@@ -24,11 +25,11 @@ func GetUserByUsername(ctx context.Context, username string) (db.User, error) {
 	return db.New(database.DB).GetUserByUsername(ctx, username)
 }
 
-func GetUserByID(ctx context.Context, userID string) (db.User, error) {
+func GetUserByID(ctx context.Context, userID uuid.UUID) (db.User, error) {
 	return db.New(database.DB).GetUserByID(ctx, userID)
 }
 
-func UpdateUserEmail(ctx context.Context, userID string, email string) error {
+func UpdateUserEmail(ctx context.Context, userID uuid.UUID, email string) error {
 	sqlEmail := sql.NullString{Valid: false}
 	if len(email) > 0 {
 		sqlEmail.Valid = true

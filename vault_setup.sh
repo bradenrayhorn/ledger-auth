@@ -17,4 +17,4 @@ path "pki/sign/ledger_auth" {
 }
 HCL
 
-vault token create -field=token -policy=ledger_auth -period=30m > token
+vault token create -field=token -policy=ledger_auth -period=30h > token

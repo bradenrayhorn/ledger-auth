@@ -9,6 +9,7 @@ import (
 	"github.com/bradenrayhorn/ledger-auth/database"
 	"github.com/bradenrayhorn/ledger-auth/services"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/spf13/viper"
 )
 
@@ -18,8 +19,13 @@ type CookieValue struct {
 }
 
 func GetSessions(c *gin.Context) {
+	userID, err := uuid.Parse(c.GetString("user_id"))
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
 	sessionService := services.NewSessionService(database.RDB)
-	sessions, err := sessionService.GetActiveSessions(context.Background(), c.GetString("user_id"))
+	sessions, err := sessionService.GetActiveSessions(context.Background(), userID)
 
 	if err != nil {
 		_ = c.Error(err)
@@ -31,7 +37,7 @@ func GetSessions(c *gin.Context) {
 	})
 }
 
-func createSession(w http.ResponseWriter, userID string, ip string, userAgent string) error {
+func createSession(w http.ResponseWriter, userID uuid.UUID, ip string, userAgent string) error {
 	sessionService := services.NewSessionService(database.RDB)
 	sessionID, err := sessionService.CreateSession(userID, services.SessionData{
 		IP:        ip,

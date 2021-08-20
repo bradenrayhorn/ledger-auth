@@ -6,16 +6,18 @@ package db
 import (
 	"context"
 	"database/sql"
+
+	"github.com/google/uuid"
 )
 
 const createUser = `-- name: CreateUser :exec
 INSERT INTO users (
     id, username, password
-) VALUES (?, ?, ?)
+) VALUES ($1, $2, $3)
 `
 
 type CreateUserParams struct {
-	ID       string
+	ID       uuid.UUID
 	Username string
 	Password string
 }
@@ -26,10 +28,10 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, username, password, email, created_at, updated_at FROM users where id = ?
+SELECT id, username, password, email, created_at, updated_at FROM users where id = $1
 `
 
-func (q *Queries) GetUserByID(ctx context.Context, id string) (User, error) {
+func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
 	row := q.db.QueryRowContext(ctx, getUserByID, id)
 	var i User
 	err := row.Scan(
@@ -44,7 +46,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id string) (User, error) {
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT id, username, password, email, created_at, updated_at FROM users WHERE username = ?
+SELECT id, username, password, email, created_at, updated_at FROM users WHERE username = $1
 `
 
 func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User, error) {
@@ -62,12 +64,12 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 }
 
 const updateUserEmail = `-- name: UpdateUserEmail :exec
-UPDATE users SET email = ? WHERE id = ?
+UPDATE users SET email = $1 WHERE id = $2
 `
 
 type UpdateUserEmailParams struct {
 	Email sql.NullString
-	ID    string
+	ID    uuid.UUID
 }
 
 func (q *Queries) UpdateUserEmail(ctx context.Context, arg UpdateUserEmailParams) error {
@@ -77,7 +79,7 @@ func (q *Queries) UpdateUserEmail(ctx context.Context, arg UpdateUserEmailParams
 
 const userExists = `-- name: UserExists :one
 SELECT EXISTS (
-    SELECT id FROM users WHERE username = ?
+    SELECT id FROM users WHERE username = $1
 )
 `
 
