@@ -33,6 +33,9 @@ func Setup() {
 		return
 	}
 	connConfig.TLSConfig = loadCACert()
+	if connConfig.TLSConfig != nil {
+		connConfig.TLSConfig.ServerName = "10.0.1.2"
+	}
 	connString := stdlib.RegisterConnConfig(connConfig)
 	db, err := sqlx.Open("pgx", connString)
 	if err != nil {
