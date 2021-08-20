@@ -21,21 +21,19 @@ var RDB *redis.Client
 var tlsConfig *tls.Config
 
 func Setup() {
-	connConfig, err := pgx.ParseConfig(fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
+	connConfig, err := pgx.ParseConfig(fmt.Sprintf("postgres://%s:%s@%s:%s/%s%s",
 		viper.GetString("pg_username"),
 		viper.GetString("pg_password"),
 		viper.GetString("pg_host"),
 		viper.GetString("pg_port"),
 		viper.GetString("pg_database"),
+		viper.GetString("pg_parameters"),
 	))
 	if err != nil {
 		zap.S().Error(err.Error())
 		return
 	}
 	connConfig.TLSConfig = loadCACert()
-	if connConfig.TLSConfig != nil {
-		connConfig.TLSConfig.ServerName = "10.0.1.2"
-	}
 	connString := stdlib.RegisterConnConfig(connConfig)
 	db, err := sqlx.Open("pgx", connString)
 	if err != nil {
@@ -88,7 +86,8 @@ func loadCACert() *tls.Config {
 	}
 
 	tlsConfig = &tls.Config{
-		RootCAs: rootCertPool,
+		RootCAs:    rootCertPool,
+		ServerName: viper.GetString("db_tls_server_name"),
 	}
 	return tlsConfig
 }
