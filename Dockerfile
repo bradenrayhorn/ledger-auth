@@ -1,4 +1,4 @@
-FROM golang:1.16.4 as build
+FROM golang:1.17 as build
 
 RUN mkdir /app
 COPY . /app
