@@ -84,7 +84,7 @@ jobs:
       vault.hashicorp.com/agent-inject-template-env: |
         {{ with secret "kv/ledger/ledger-auth" -}}
           {{- range $k, $v := .Data.data }}
-            {{- $k }}="{{ $v }}"{{ "\n" }}
+            {{- $k | toUpper }}="{{ $v }}"{{ "\n" }}
           {{- end }}
         {{- end }}
       vault.hashicorp.com/agent-inject-file-env: ".env"
