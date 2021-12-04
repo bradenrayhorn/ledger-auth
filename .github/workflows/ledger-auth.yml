@@ -74,7 +74,6 @@ jobs:
           version: ${{ github.sha }}
           atomic: true
           secrets: ${{ toJSON(secrets) }}
-          dry-run: true
           timeout: 120s
           value-files: >-
             [
