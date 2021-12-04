@@ -19,7 +19,7 @@ import (
 func MakeRouter() *gin.Engine {
 	gin.DefaultWriter = makeZapWriter()
 	router := gin.New()
-	router.TrustedProxies = viper.GetStringSlice("trusted_proxies")
+	router.SetTrustedProxies(viper.GetStringSlice("trusted_proxies"))
 	router.RemoteIPHeaders = []string{"X-Forwarded-For"}
 
 	// middleware
