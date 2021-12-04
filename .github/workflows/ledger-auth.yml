@@ -67,13 +67,14 @@ jobs:
           namespace: ledger-auth
           repository: https://bradenrayhorn.github.io/helm-charts/
           chart: webapp
-          chart_version: 0.9.0
+          chart_version: 0.10.0
           track: stable
           helm: helm3
           release: ledger-auth
           version: ${{ github.sha }}
           atomic: true
           secrets: ${{ toJSON(secrets) }}
+          dry-run: true
           timeout: 120s
           value-files: >-
             [
