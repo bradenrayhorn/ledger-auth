@@ -67,7 +67,7 @@ jobs:
           namespace: ledger-auth
           repository: https://bradenrayhorn.github.io/helm-charts/
           chart: webapp
-          chart_version: 0.10.1
+          chart_version: 0.11.0
           track: stable
           helm: helm3
           release: ledger-auth

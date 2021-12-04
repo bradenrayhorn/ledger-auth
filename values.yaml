@@ -76,6 +76,18 @@ ingress:
 
 jobs:
   - name: migrate
+    annotations:
+      vault.hashicorp.com/agent-inject: "true"
+      vault.hashicorp.com/role: "ledger-auth"
+      vault.hashicorp.com/agent-pre-populate-only: "true"
+      vault.hashicorp.com/agent-inject-secret-env: "kv/ledger/ledger-auth"
+      vault.hashicorp.com/agent-inject-template-env: |
+        {{ with secret "kv/ledger/ledger-auth" -}}
+          {{- range $k, $v := .Data.data }}
+            {{- $k }}="{{ $v }}"{{ "\n" }}
+          {{- end }}
+        {{- end }}
+      vault.hashicorp.com/agent-inject-file-env: ".env"
     containers:
     - name: migrate
       image: "migrate/migrate:4"
@@ -86,18 +98,6 @@ jobs:
             set -o allexport &&
             source /vault/secrets/.env &&
             /migrate -source github://bradenrayhorn/ledger-auth/sql/migrations#${{ github.sha }} -database postgres://${PG_USERNAME}:${PG_PASSWORD}@${PG_HOST}:${PG_PORT}/${PG_DATABASE} up
-      annotations:
-        vault.hashicorp.com/agent-inject: "true"
-        vault.hashicorp.com/role: "ledger-auth"
-        vault.hashicorp.com/agent-pre-populate-only: "true"
-        vault.hashicorp.com/agent-inject-secret-env: "kv/ledger/ledger-auth"
-        vault.hashicorp.com/agent-inject-template-env: |
-          {{ with secret "kv/ledger/ledger-auth" -}}
-            {{- range $k, $v := .Data.data }}
-              {{- $k }}="{{ $v }}"{{ "\n" }}
-            {{- end }}
-          {{- end }}
-        vault.hashicorp.com/agent-inject-file-env: ".env"
 
 resources: {}
 
