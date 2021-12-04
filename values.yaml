@@ -91,7 +91,7 @@ jobs:
     containers:
     - name: migrate
       image: "migrate/migrate:4"
-      command: ["/bin/bash"]
+      command: ["/bin/sh"]
       args:
         - -c
         - >-
